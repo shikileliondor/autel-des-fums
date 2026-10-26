@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Shared secret for the post-deploy hook (migrations + cache). Empty disables the hook.
+    'deploy' => [
+        'token' => env('DEPLOY_HOOK_TOKEN'),
+    ],
+
 ];

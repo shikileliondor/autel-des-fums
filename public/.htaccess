@@ -23,3 +23,8 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Deploy bookkeeping file written by the FTP deploy action: never serve it.
+<Files ".ftp-deploy-sync-state.json">
+    Require all denied
+</Files>

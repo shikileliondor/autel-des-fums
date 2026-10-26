@@ -147,3 +147,9 @@ test('the privacy page shows the contact details', function () {
             ->where('event.contactEmail', 'auteldesparfums@studiobeyam.net')
             ->where('event.contactPhone', '07 00 00 00 00'));
 });
+
+test('the boutique page can be displayed', function () {
+    $this->get(route('boutique'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('boutique'));
+});

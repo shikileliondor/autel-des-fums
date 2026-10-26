@@ -1,0 +1,132 @@
+name: deploy
+
+# Builds the app and uploads it over FTP once the tests pass on main.
+# Server layout (the domain must point to public_html):
+#   <DEPLOY_BASE_DIR>/<DEPLOY_APP_DIR>/      Laravel app, outside the web root (.env lives here)
+#   <DEPLOY_BASE_DIR>/<DEPLOY_PUBLIC_DIR>/   contents of public/ + production index.php
+#
+# Secrets:   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, DEPLOY_HOOK_TOKEN (optional)
+# Variables: DEPLOY_BASE_DIR (default: FTP home), DEPLOY_APP_DIR (default: adp-app),
+#            DEPLOY_PUBLIC_DIR (default: public_html), FTP_PROTOCOL (default: ftps),
+#            APP_URL (needed to call the post-deploy hook)
+
+on:
+  workflow_run:
+    workflows: [tests]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      BASE_DIR: ${{ vars.DEPLOY_BASE_DIR }}
+      APP_DIR: ${{ vars.DEPLOY_APP_DIR || 'adp-app' }}
+      PUBLIC_DIR: ${{ vars.DEPLOY_PUBLIC_DIR || 'public_html' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install PHP dependencies (production)
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Build front-end assets
+        # Wayfinder runs `php artisan` during the build, which needs an app key.
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          npm ci
+          npm run build
+          rm .env
+
+      - name: Assemble release
+        run: |
+          mkdir -p dist/app dist/public
+
+          rsync -a ./ dist/app/ \
+            --exclude=.git --exclude=.github --exclude=dist \
+            --exclude=node_modules --exclude=public --exclude=tests \
+            --exclude=docker --exclude=deploy --exclude=compose.yaml --exclude=.dockerignore \
+            --exclude='.env' --exclude='.env.*' \
+            --exclude=resources/js --exclude=resources/css \
+            --exclude=database/database.sqlite --exclude=.phpunit.cache \
+            --exclude=package.json --exclude=package-lock.json --exclude=pnpm-workspace.yaml \
+            --exclude=.npmrc --exclude=vite.config.ts --exclude=tsconfig.json --exclude=components.json
+
+          # Keep the storage folder structure, never local runtime files.
+          find dist/app/storage -type f ! -name .gitignore -delete
+
+          cp -a public/. dist/public/
+          rm -f dist/public/hot dist/public/fonts-manifest.dev.json
+          sed "s#__APP_DIR__#${APP_DIR}#" deploy/index.php > dist/public/index.php
+
+      - name: Resolve server paths
+        id: paths
+        run: |
+          base="${BASE_DIR%/}"
+          prefix="${base:+$base/}"
+          echo "app=${prefix}${APP_DIR}/" >> "$GITHUB_OUTPUT"
+          echo "public=${prefix}${PUBLIC_DIR}/" >> "$GITHUB_OUTPUT"
+
+      - name: Upload app
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          local-dir: ./dist/app/
+          server-dir: ${{ steps.paths.outputs.app }}
+          state-name: .ftp-deploy-sync-state.json
+          timeout: 600000
+
+      - name: Upload public files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          local-dir: ./dist/public/
+          server-dir: ${{ steps.paths.outputs.public }}
+          state-name: .ftp-deploy-sync-state.json
+          timeout: 600000
+
+      - name: Run migrations and cache config
+        env:
+          DEPLOY_HOOK_TOKEN: ${{ secrets.DEPLOY_HOOK_TOKEN }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_TOKEN" ] || [ -z "$APP_URL" ]; then
+            echo "::warning::DEPLOY_HOOK_TOKEN or APP_URL not set: run migrations and 'php artisan optimize' on the server yourself."
+            exit 0
+          fi
+          curl -fsS -X POST -H "X-Deploy-Token: $DEPLOY_HOOK_TOKEN" "${APP_URL%/}/deploy-hook"

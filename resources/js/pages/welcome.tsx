@@ -8,8 +8,8 @@ import {
     Sparkles,
 } from 'lucide-react';
 import Countdown from '@/components/event/countdown';
-import SocialCards from '@/components/ui/card-fan-carousel';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
+import PhotoMosaic from '@/components/event/photo-mosaic';
 import { create } from '@/routes/registration';
 
 const moments = [
@@ -32,20 +32,29 @@ const moments = [
 
 const photos = [
     {
+        src: '/image/souvenirs/souvenir-5.jpg',
+        alt: 'Un fidèle en adoration, les deux mains levées vers le ciel',
+        label: 'Célébration',
+    },
+    {
         src: '/image/souvenirs/souvenir-1.jpg',
         alt: 'Un fidèle en adoration, la main levée',
+        label: 'Adoration',
     },
     {
         src: '/image/souvenirs/souvenir-2.jpg',
         alt: 'Louange, les deux mains levées vers le ciel',
+        label: 'Louange',
     },
     {
         src: '/image/souvenirs/souvenir-3.jpg',
         alt: 'L’assemblée debout dans la prière',
+        label: 'Prière',
     },
     {
         src: '/image/souvenirs/souvenir-4.jpg',
         alt: 'Des fidèles vêtus de blanc pendant le culte',
+        label: 'Assemblée',
     },
 ];
 
@@ -75,16 +84,32 @@ export default function Welcome() {
         <EventShell>
             <Head title={event.tagline} />
 
-            <section className="flex flex-col items-center text-center">
-                <p className="mb-4 text-xs font-bold tracking-[0.25em] text-event-accent-ink uppercase sm:text-sm">
-                    {event.tagline}
+            <section className="grid gap-6 text-center lg:grid-cols-[1fr_auto] lg:items-end lg:gap-12 lg:text-left">
+                <div>
+                    <p className="mb-4 text-xs font-bold tracking-[0.3em] text-event-accent-ink uppercase sm:text-sm">
+                        — {event.tagline}
+                    </p>
+                    <h1 className="text-[2.75rem] leading-[1.02] font-extrabold tracking-tight text-event-fg sm:text-7xl">
+                        L’Autel
+                        <span className="block text-event-accent">
+                            des Parfums
+                        </span>
+                    </h1>
+                </div>
+                <p className="mx-auto max-w-md text-base leading-relaxed text-event-muted sm:text-lg lg:mx-0 lg:max-w-sm lg:text-right">
+                    <span className="first-letter:uppercase">{date}</span>
+                    {time && <> à {time}</>} —{' '}
+                    {[event.venue, event.city].filter(Boolean).join(', ')}.{' '}
+                    {event.hostChurch}.
                 </p>
+            </section>
 
-                <h1 className="max-w-3xl text-[2.6rem] leading-[1.02] font-extrabold tracking-tight text-event-fg sm:text-7xl">
-                    L’Autel des Parfums.
-                </h1>
+            <div className="my-8 border-t border-event-border sm:my-10" />
 
-                <p className="mt-6 max-w-xl text-base leading-relaxed text-event-muted sm:text-lg">
+            <PhotoMosaic photos={photos} />
+
+            <section className="mt-12 flex flex-col items-center text-center">
+                <p className="max-w-xl text-base leading-relaxed text-event-muted sm:text-lg">
                     « Que ma prière soit devant ta face comme l’encens, et
                     l’élévation de mes mains comme l’offrande du soir ! »
                     <span className="mt-1 block text-sm font-semibold text-event-fg/70">
@@ -94,7 +119,7 @@ export default function Welcome() {
 
                 <Link
                     href={create()}
-                    className="group mt-10 inline-flex items-center gap-2 rounded-full bg-event-accent px-8 py-4 text-base font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110"
+                    className="group mt-8 inline-flex items-center gap-2 rounded-full bg-event-accent px-8 py-4 text-base font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110"
                 >
                     Je m’inscris
                     <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />
@@ -160,24 +185,7 @@ export default function Welcome() {
                 </div>
             </section>
 
-            <section className="mt-16">
-                <h2 className="text-center text-3xl font-extrabold tracking-tight text-event-fg sm:text-4xl">
-                    En images
-                </h2>
-                <p className="mx-auto mt-3 max-w-md text-center text-event-muted">
-                    Quelques moments de la précédente édition.
-                </p>
-                <div className="mt-4">
-                    <SocialCards
-                        cards={photos.map((photo) => ({
-                            imgUrl: photo.src,
-                            alt: photo.alt,
-                        }))}
-                    />
-                </div>
-            </section>
-
-            <section className="mt-16 rounded-3xl border border-event-accent/30 bg-gradient-to-br from-event-accent/20 to-event-accent/5 px-5 py-8 text-center sm:p-12">
+            <section className="mt-16 rounded-3xl border border-event-border bg-white px-5 py-8 text-center sm:p-12">
                 <h2 className="text-3xl font-extrabold tracking-tight text-event-fg sm:text-4xl">
                     Inscris-toi.
                 </h2>

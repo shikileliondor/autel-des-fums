@@ -1,7 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import EventNavbar from '@/components/event/event-navbar';
+import WhatsAppButton from '@/components/event/whatsapp-button';
 import { cn } from '@/lib/utils';
-import { home, privacy } from '@/routes';
+import { boutique, home, privacy } from '@/routes';
 
 // Dates are shown in Abidjan time whatever the visitor's device timezone.
 export const EVENT_TIMEZONE = 'Africa/Abidjan';
@@ -21,7 +23,18 @@ export function formatEventDate(startsAt: string | null): string | null {
 
 export function EventLogo({ className }: { className?: string }) {
     return (
-        <Link href={home()} className={cn('block shrink-0', className)}>
+        <Link
+            href={home()}
+            className={cn(
+                'flex shrink-0 items-center gap-3 sm:gap-5',
+                className,
+            )}
+        >
+            <img
+                src="/image/logo-foursquare-niangon.png"
+                alt="Église Évangélique Foursquare Niangon Révélation"
+                className="h-7 w-auto sm:h-10"
+            />
             <img
                 src="/image/logo-autel-des-parfums-dark.png"
                 alt="L’Autel des Parfums"
@@ -39,35 +52,32 @@ export default function EventShell({
     className?: string;
 }) {
     const { event } = usePage().props;
-    const date = formatEventDate(event.startsAt);
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-event-bg font-sans text-event-fg antialiased scheme-light">
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-event-accent/10 blur-[140px]"
-            />
-
+        <div className="relative min-h-screen overflow-x-clip bg-event-bg font-sans text-event-fg antialiased scheme-light">
             <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 sm:px-10">
-                <header className="flex items-center justify-between gap-3 border-b border-event-border py-6 sm:py-8">
-                    <EventLogo />
-                    <p className="flex items-center gap-2 text-right text-[10px] font-bold tracking-[0.14em] whitespace-nowrap text-event-muted uppercase sm:text-xs sm:tracking-[0.18em]">
-                        <span className="size-2 shrink-0 rounded-full bg-event-accent" />
-                        {event.city} · {date ?? 'Date à venir'}
-                    </p>
-                </header>
+                <EventNavbar />
 
                 <main className={cn('flex-1 py-10 sm:py-16', className)}>
                     {children}
                 </main>
 
+                {event.contactPhone && (
+                    <WhatsAppButton phone={event.contactPhone} />
+                )}
+
                 <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-event-border py-8 text-xs text-event-muted">
                     <p>
                         {event.name} · {event.tagline}.
                     </p>
-                    <Link href={privacy()} className="hover:text-event-fg">
-                        Confidentialité
-                    </Link>
+                    <div className="flex gap-5">
+                        <Link href={boutique()} className="hover:text-event-fg">
+                            Boutique
+                        </Link>
+                        <Link href={privacy()} className="hover:text-event-fg">
+                            Confidentialité
+                        </Link>
+                    </div>
                 </footer>
             </div>
         </div>

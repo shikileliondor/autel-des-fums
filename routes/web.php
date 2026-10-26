@@ -2,13 +2,16 @@
 
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeployHookController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 Route::inertia('confidentialite', 'privacy')->name('privacy');
+Route::inertia('boutique', 'boutique')->name('boutique');
 
 Route::get('inscription', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('inscription', [RegistrationController::class, 'store'])
@@ -16,6 +19,11 @@ Route::post('inscription', [RegistrationController::class, 'store'])
     ->name('registration.store');
 Route::get('inscription/confirmee', [RegistrationController::class, 'confirmed'])->name('registration.confirmed');
 Route::get('inscription/confirmee/pdf', [RegistrationController::class, 'pdf'])->name('registration.pdf');
+
+Route::post('deploy-hook', DeployHookController::class)
+    ->withoutMiddleware(ValidateCsrfToken::class)
+    ->middleware('throttle:5,1')
+    ->name('deploy-hook');
 
 Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])

@@ -17,7 +17,7 @@ export default function RegistrationConfirmed({ registration }: Props) {
             <Head title="Inscription confirmée" />
 
             <div className="mx-auto flex max-w-xl flex-col items-center text-center">
-                <div className="mb-8 flex size-20 items-center justify-center rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/25 to-event-accent/5">
+                <div className="mb-8 flex size-20 items-center justify-center rounded-3xl border border-emerald-500/30 bg-emerald-50">
                     <Check
                         className="size-9 text-emerald-600"
                         strokeWidth={2}
