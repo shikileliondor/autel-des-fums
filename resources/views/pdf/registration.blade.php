@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Inscription {{ $registration->reference }}</title>
+    <style>
+        @page { margin: 48px; }
+        body { font-family: DejaVu Sans, sans-serif; color: #1c1917; font-size: 12px; }
+        .brand { font-size: 14px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #ea580c; }
+        h1 { font-size: 24px; margin: 32px 0 6px; }
+        .muted { color: #78716c; }
+        .code { margin: 28px 0; padding: 18px; border: 2px dashed #f97316; text-align: center; }
+        .code-label { font-size: 10px; letter-spacing: 3px; color: #78716c; text-transform: uppercase; }
+        .code-value { font-family: DejaVu Sans Mono, monospace; font-size: 30px; font-weight: bold; letter-spacing: 4px; margin-top: 6px; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 8px 0; border-bottom: 1px solid #e7e5e4; }
+        td.label { width: 35%; color: #78716c; }
+        .footer { margin-top: 36px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div style="text-align:center;margin-bottom:24px;"><img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('image/logo-pdf.jpg'))) }}" alt="{{ $eventName }}" style="width:240px;"></div>
+
+    <h1>Inscription confirmée</h1>
+    <p class="muted">{{ $eventName }}@if ($startsAt) · {{ $startsAt }}@endif @if ($place) · {{ $place }}@endif</p>
+
+    <div class="code">
+        <div class="code-label">Code d’inscription</div>
+        <div class="code-value">{{ $registration->reference }}</div>
+    </div>
+
+    <table>
+        <tr><td class="label">Nom</td><td>{{ $registration->first_name }} {{ $registration->last_name }}</td></tr>
+        <tr><td class="label">Téléphone</td><td>{{ $registration->phone }}</td></tr>
+        @if ($registration->email)
+            <tr><td class="label">E-mail</td><td>{{ $registration->email }}</td></tr>
+        @endif
+        <tr><td class="label">Ville / commune</td><td>{{ $registration->city }}</td></tr>
+        @if ($registration->church)
+            <tr><td class="label">Église</td><td>{{ $registration->church }}</td></tr>
+        @endif
+        <tr><td class="label">Inscrit le</td><td>{{ $registration->created_at->locale('fr')->translatedFormat('j F Y') }}</td></tr>
+    </table>
+
+    <p class="footer">Que Dieu te bénisse abondamment et à très bientôt.</p>
+</body>
+</html>
