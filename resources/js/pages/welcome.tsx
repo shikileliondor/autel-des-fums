@@ -10,6 +10,7 @@ import {
 import Countdown from '@/components/event/countdown';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
 import PhotoMosaic from '@/components/event/photo-mosaic';
+import WelcomeModal from '@/components/event/welcome-modal';
 import { create } from '@/routes/registration';
 
 const moments = [
@@ -83,6 +84,7 @@ export default function Welcome() {
     return (
         <EventShell>
             <Head title={event.tagline} />
+            <WelcomeModal />
 
             <section className="grid gap-6 text-center lg:grid-cols-[1fr_auto] lg:items-end lg:gap-12 lg:text-left">
                 <div>

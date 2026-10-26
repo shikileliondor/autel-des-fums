@@ -1,14 +1,12 @@
 name: deploy
 
-# Builds the app and uploads it over FTP once the tests pass on main.
-# Server layout (the domain must point to public_html):
-#   <DEPLOY_BASE_DIR>/<DEPLOY_APP_DIR>/      Laravel app, outside the web root (.env lives here)
-#   <DEPLOY_BASE_DIR>/<DEPLOY_PUBLIC_DIR>/   contents of public/ + production index.php
+# Builds a ready-to-run zip of the site and uploads it over FTP once the tests pass on main.
+# Extract it by hand into public_html/ADP/project/: the zip never contains .env, so the
+# server's configuration is kept.
 #
-# Secrets:   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, DEPLOY_HOOK_TOKEN (optional)
-# Variables: DEPLOY_BASE_DIR (default: FTP home), DEPLOY_APP_DIR (default: adp-app),
-#            DEPLOY_PUBLIC_DIR (default: public_html), FTP_PROTOCOL (default: ftps),
-#            APP_URL (needed to call the post-deploy hook)
+# Secrets:   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD
+# Variables: RELEASES_DIR (default: releases, outside public_html so the zip cannot be
+#            downloaded from the web), FTP_PROTOCOL (default: ftps)
 
 on:
   workflow_run:
@@ -29,11 +27,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: production
-
-    env:
-      BASE_DIR: ${{ vars.DEPLOY_BASE_DIR }}
-      APP_DIR: ${{ vars.DEPLOY_APP_DIR || 'adp-app' }}
-      PUBLIC_DIR: ${{ vars.DEPLOY_PUBLIC_DIR || 'public_html' }}
 
     steps:
       - name: Checkout code
@@ -69,12 +62,12 @@ jobs:
 
       - name: Assemble release
         run: |
-          mkdir -p dist/app dist/public
+          mkdir -p dist
 
-          rsync -a ./ dist/app/ \
+          rsync -a ./ dist/ \
             --exclude=.git --exclude=.github --exclude=dist \
-            --exclude=node_modules --exclude=public --exclude=tests \
-            --exclude=docker --exclude=deploy --exclude=compose.yaml --exclude=.dockerignore \
+            --exclude=node_modules --exclude=tests \
+            --exclude=docker --exclude=compose.yaml --exclude=.dockerignore \
             --exclude='.env' --exclude='.env.*' \
             --exclude=resources/js --exclude=resources/css \
             --exclude=database/database.sqlite --exclude=.phpunit.cache \
@@ -82,51 +75,42 @@ jobs:
             --exclude=.npmrc --exclude=vite.config.ts --exclude=tsconfig.json --exclude=components.json
 
           # Keep the storage folder structure, never local runtime files.
-          find dist/app/storage -type f ! -name .gitignore -delete
+          find dist/storage -type f ! -name .gitignore -delete
 
-          cp -a public/. dist/public/
+          # Dev-server leftovers would make the site load its assets from localhost.
           rm -f dist/public/hot dist/public/fonts-manifest.dev.json
-          sed "s#__APP_DIR__#${APP_DIR}#" deploy/index.php > dist/public/index.php
 
-      - name: Resolve server paths
-        id: paths
+      - name: Create zip
+        id: zip
         run: |
-          base="${BASE_DIR%/}"
-          prefix="${base:+$base/}"
-          echo "app=${prefix}${APP_DIR}/" >> "$GITHUB_OUTPUT"
-          echo "public=${prefix}${PUBLIC_DIR}/" >> "$GITHUB_OUTPUT"
+          name="adp-$(date -u +%Y%m%d-%H%M)-$(git rev-parse --short HEAD).zip"
+          (cd dist && zip -qr "../$name" .)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          ls -lh "$name"
 
-      - name: Upload app
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Keep a copy on GitHub
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          local-dir: ./dist/app/
-          server-dir: ${{ steps.paths.outputs.app }}
-          state-name: .ftp-deploy-sync-state.json
-          timeout: 600000
+          name: ${{ steps.zip.outputs.name }}
+          path: ${{ steps.zip.outputs.name }}
+          retention-days: 14
+          compression-level: 0
 
-      - name: Upload public files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          local-dir: ./dist/public/
-          server-dir: ${{ steps.paths.outputs.public }}
-          state-name: .ftp-deploy-sync-state.json
-          timeout: 600000
-
-      - name: Run migrations and cache config
+      - name: Upload zip over FTP
         env:
-          DEPLOY_HOOK_TOKEN: ${{ secrets.DEPLOY_HOOK_TOKEN }}
-          APP_URL: ${{ vars.APP_URL }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          RELEASES_DIR: ${{ vars.RELEASES_DIR || 'releases' }}
+          ZIP: ${{ steps.zip.outputs.name }}
         run: |
-          if [ -z "$DEPLOY_HOOK_TOKEN" ] || [ -z "$APP_URL" ]; then
-            echo "::warning::DEPLOY_HOOK_TOKEN or APP_URL not set: run migrations and 'php artisan optimize' on the server yourself."
-            exit 0
-          fi
-          curl -fsS -X POST -H "X-Deploy-Token: $DEPLOY_HOOK_TOKEN" "${APP_URL%/}/deploy-hook"
+          tls=""
+          [ "$FTP_PROTOCOL" = "ftps" ] && tls="--ssl-reqd"
+          dir="${RELEASES_DIR%/}"
+          # One dated copy (history) and one stable name to extract.
+          for target in "$ZIP" "adp-latest.zip"; do
+            curl -sS --fail $tls --ftp-create-dirs --netrc-file <(printf 'machine %s login %s password %s\n' "$FTP_SERVER" "$FTP_USERNAME" "$FTP_PASSWORD") \
+              -T "$ZIP" "ftp://$FTP_SERVER/$dir/$target"
+          done
+          echo "::notice::Uploaded $dir/$ZIP and $dir/adp-latest.zip: extract into public_html/ADP/project/, then call the deploy hook."

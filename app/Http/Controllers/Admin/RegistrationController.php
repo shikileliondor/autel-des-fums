@@ -50,6 +50,10 @@ class RegistrationController extends Controller
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');
 
+            if ($handle === false) {
+                return;
+            }
+
             // UTF-8 BOM so Excel displays accents correctly.
             fwrite($handle, "\xEF\xBB\xBF");
 

@@ -49,6 +49,8 @@ class HandleInertiaRequests extends Middleware
             'event' => [
                 'name' => config('event.name'),
                 'tagline' => config('event.tagline'),
+                'theme' => config('event.theme'),
+                'themeReference' => config('event.theme_reference'),
                 'startsAt' => config('event.starts_at')
                     ? Carbon::parse(config('event.starts_at'))->toIso8601String()
                     : null,

@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Carbon;
 
 class RegistrationConfirmed extends Mailable
 {
@@ -43,7 +44,7 @@ class RegistrationConfirmed extends Mailable
             with: [
                 'eventName' => config('event.name'),
                 'startsAt' => config('event.starts_at')
-                    ? now()->parse(config('event.starts_at'))->locale('fr')->translatedFormat(
+                    ? Carbon::parse(config('event.starts_at'))->settings(['locale' => 'fr'])->translatedFormat(
                         str_contains(config('event.starts_at'), ':') ? 'l j F Y \à H\hi' : 'l j F Y'
                     )
                     : null,

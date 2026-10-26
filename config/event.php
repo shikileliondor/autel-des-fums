@@ -16,6 +16,10 @@ return [
 
     'tagline' => env('EVENT_TAGLINE', "Un programme d'adoration"),
 
+    'theme' => env('EVENT_THEME', "Saint, saint, saint est l'Éternel"),
+
+    'theme_reference' => env('EVENT_THEME_REFERENCE', 'Ésaïe 6:3'),
+
     'starts_at' => env('EVENT_STARTS_AT'),
 
     'city' => env('EVENT_CITY', 'Abidjan'),

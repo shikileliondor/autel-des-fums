@@ -380,7 +380,7 @@ export default function Boutique() {
                             {products.length} articles
                         </p>
                     </div>
-                    <div className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2">
                         {products.map((product) => (
                             <ProductCard
                                 key={product.id}
@@ -393,7 +393,10 @@ export default function Boutique() {
                     </div>
                 </section>
 
-                <aside className="lg:sticky lg:top-24 lg:self-start">
+                <aside
+                    id="panier"
+                    className="scroll-mt-24 lg:sticky lg:top-24 lg:self-start"
+                >
                     <div className="rounded-2xl border border-event-border bg-event-surface p-5">
                         <div className="flex items-center justify-between">
                             <h2 className="flex items-center gap-2 font-bold text-event-fg">
@@ -518,6 +521,26 @@ export default function Boutique() {
                     </div>
                 </aside>
             </div>
+
+            {/* Espace réservé pour que la barre fixe ne masque pas le bas de page. */}
+            {count > 0 && <div className="h-16 lg:hidden" />}
+            {count > 0 && (
+                <a
+                    href="#panier"
+                    className={cn(
+                        'fixed bottom-4 left-4 z-40 flex h-14 items-center justify-between gap-3 rounded-2xl bg-event-fg px-5 text-white shadow-xl lg:hidden',
+                        event.contactPhone ? 'right-24 sm:right-28' : 'right-4',
+                    )}
+                >
+                    <span className="flex items-center gap-2 text-sm font-bold">
+                        <ShoppingBag className="size-4" />
+                        Panier ({count})
+                    </span>
+                    <span className="text-sm font-bold text-event-accent">
+                        {formatPrice(total)}
+                    </span>
+                </a>
+            )}
         </EventShell>
     );
 }

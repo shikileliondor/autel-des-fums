@@ -1,6 +1,8 @@
 export type EventInfo = {
     name: string;
     tagline: string;
+    theme: string;
+    themeReference: string | null;
     startsAt: string | null;
     hasTime: boolean;
     city: string;

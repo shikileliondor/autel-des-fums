@@ -9,6 +9,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -55,7 +56,7 @@ class RegistrationController extends Controller
      */
     public function confirmed(Request $request): Response|RedirectResponse
     {
-        $registration = Registration::find($request->session()->get('registration_id'));
+        $registration = Registration::find((int) $request->session()->get('registration_id'));
 
         if (! $registration) {
             return to_route('registration.create');
@@ -74,7 +75,7 @@ class RegistrationController extends Controller
      */
     public function pdf(Request $request): HttpResponse|RedirectResponse
     {
-        $registration = Registration::find($request->session()->get('registration_id'));
+        $registration = Registration::find((int) $request->session()->get('registration_id'));
 
         if (! $registration) {
             return to_route('registration.create');
@@ -86,7 +87,7 @@ class RegistrationController extends Controller
             'registration' => $registration,
             'eventName' => config('event.name'),
             'startsAt' => $startsAt
-                ? now()->parse($startsAt)->locale('fr')->translatedFormat(
+                ? Carbon::parse($startsAt)->settings(['locale' => 'fr'])->translatedFormat(
                     str_contains($startsAt, ':') ? 'l j F Y \à H\hi' : 'l j F Y'
                 )
                 : null,

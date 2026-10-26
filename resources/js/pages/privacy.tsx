@@ -6,7 +6,7 @@ import EventShell from '@/components/event/event-shell';
 function Section({ title, children }: { title: string; children: ReactNode }) {
     return (
         <p className="leading-relaxed text-event-muted">
-            <strong className="font-bold text-white">{title}.</strong>{' '}
+            <strong className="font-bold text-event-fg">{title}.</strong>{' '}
             {children}
         </p>
     );
@@ -20,7 +20,7 @@ export default function Privacy() {
             par e-mail à{' '}
             <a
                 href={`mailto:${event.contactEmail}`}
-                className="font-semibold text-white underline underline-offset-2"
+                className="font-semibold text-event-fg underline underline-offset-2"
             >
                 {event.contactEmail}
             </a>
@@ -45,7 +45,7 @@ export default function Privacy() {
                     <p className="mb-3 text-xs font-bold tracking-[0.25em] text-event-accent uppercase">
                         Confidentialité
                     </p>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+                    <h1 className="text-4xl font-extrabold tracking-tight text-event-fg sm:text-5xl">
                         Vos données, en confiance.
                     </h1>
                 </div>
