@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { Check, Download } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import EventShell from '@/components/event/event-shell';
 import { home } from '@/routes';
 import { pdf } from '@/routes/registration';
@@ -9,9 +10,36 @@ type Props = {
         reference: string;
         firstName: string;
     };
+    /** Vrai uniquement juste après l'inscription (pas au rechargement). */
+    autoDownload: boolean;
 };
 
-export default function RegistrationConfirmed({ registration }: Props) {
+export default function RegistrationConfirmed({
+    registration,
+    autoDownload,
+}: Props) {
+    const downloaded = useRef(false);
+
+    useEffect(() => {
+        if (!autoDownload || downloaded.current) {
+            return;
+        }
+
+        // Laisse la page s'afficher avant de lancer le téléchargement.
+        const timer = setTimeout(() => {
+            downloaded.current = true;
+
+            const link = document.createElement('a');
+            link.href = pdf.url();
+            link.download = '';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, [autoDownload]);
+
     return (
         <EventShell className="flex items-center">
             <Head title="Inscription confirmée" />
@@ -50,6 +78,12 @@ export default function RegistrationConfirmed({ registration }: Props) {
                     <Download className="size-4" />
                     Télécharger en PDF
                 </a>
+                {autoDownload && (
+                    <p className="mt-2 text-xs text-event-muted">
+                        Ton PDF se télécharge automatiquement. Sinon, utilise le
+                        bouton ci-dessus.
+                    </p>
+                )}
 
                 <p className="mt-8 font-semibold text-event-fg/80">
                     Que Dieu te bénisse abondamment et à très bientôt.

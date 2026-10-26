@@ -49,7 +49,8 @@ class RegistrationController extends Controller
         // Kept in the session (not flashed) so the page can be reloaded and the PDF downloaded.
         $request->session()->put('registration_id', $registration->id);
 
-        return to_route('registration.confirmed');
+        // Flashed: the PDF downloads automatically on the first display only, not on reload.
+        return to_route('registration.confirmed')->with('download_pdf', true);
     }
 
     /**
@@ -68,6 +69,7 @@ class RegistrationController extends Controller
                 'reference' => $registration->reference,
                 'firstName' => $registration->first_name,
             ],
+            'autoDownload' => (bool) $request->session()->get('download_pdf', false),
         ]);
     }
 

@@ -82,6 +82,16 @@ test('the confirmation page shows the reference of the registration just made', 
             ->where('registration.firstName', 'Ange'));
 });
 
+test('the pdf downloads automatically right after registering, not on reload', function () {
+    $this->post(route('registration.store'), validRegistration());
+
+    $this->get(route('registration.confirmed'))
+        ->assertInertia(fn (Assert $page) => $page->where('autoDownload', true));
+
+    $this->get(route('registration.confirmed'))
+        ->assertInertia(fn (Assert $page) => $page->where('autoDownload', false));
+});
+
 test('the confirmation can be downloaded as a pdf', function () {
     $this->post(route('registration.store'), validRegistration());
 

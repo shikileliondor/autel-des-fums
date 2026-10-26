@@ -64,8 +64,8 @@
 
     /* Site public de l'Autel des Parfums (thème clair, couleurs du logo) */
     --color-event-bg: #ffffff;
-    --color-event-surface: #fbf7f3;
-    --color-event-border: #eee5dc;
+    --color-event-surface: #ffffff;
+    --color-event-border: #e8e8e8;
     --color-event-fg: #1c1410;
     --color-event-muted: #6b5f55;
     --color-event-accent: #f9731a;
