@@ -1,35 +1,12 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import {
-    ArrowRight,
-    CalendarDays,
-    HandHeart,
-    MapPin,
-    Music,
-    Sparkles,
-} from 'lucide-react';
+import { ArrowRight, CalendarDays, MapPin, ShoppingBag } from 'lucide-react';
 import Countdown from '@/components/event/countdown';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
 import PhotoMosaic from '@/components/event/photo-mosaic';
 import WelcomeModal from '@/components/event/welcome-modal';
+import { formatPrice, products } from '@/lib/boutique';
+import { boutique } from '@/routes';
 import { create } from '@/routes/registration';
-
-const moments = [
-    {
-        icon: Music,
-        title: 'Louange & adoration',
-        text: 'Un temps prolongé pour élever nos voix et nos cœurs vers Dieu.',
-    },
-    {
-        icon: HandHeart,
-        title: 'Intercession',
-        text: 'Des prières qui montent devant le trône comme un parfum de bonne odeur.',
-    },
-    {
-        icon: Sparkles,
-        title: 'Présence de Dieu',
-        text: 'Un rendez-vous pour se tenir devant Lui, simplement et ensemble.',
-    },
-];
 
 const photos = [
     {
@@ -71,6 +48,8 @@ export default function Welcome() {
               timeZone: EVENT_TIMEZONE,
           }).format(new Date(event.startsAt))
         : 'Date bientôt annoncée';
+
+    const minPrice = Math.min(...products.map((product) => product.price));
 
     const time =
         event.startsAt && event.hasTime
@@ -166,25 +145,61 @@ export default function Welcome() {
             </section>
 
             <section className="mt-16">
-                <h2 className="text-center text-3xl font-extrabold tracking-tight text-event-fg sm:text-4xl">
-                    Au programme
-                </h2>
-                <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                    {moments.map(({ icon: Icon, title, text }) => (
-                        <div
-                            key={title}
-                            className="rounded-3xl border border-event-border bg-event-surface/60 p-5 lg:p-6"
+                <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+                    <div>
+                        <p className="text-xs font-bold tracking-[0.25em] text-event-accent-ink uppercase">
+                            Boutique
+                        </p>
+                        <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-event-fg sm:text-4xl">
+                            Le t-shirt de l’Autel
+                        </h2>
+                        <p className="mt-2 max-w-md text-event-muted">
+                            {products.length} couleurs, à partir de{' '}
+                            {formatPrice(minPrice)}. Floquage personnalisé
+                            possible.
+                        </p>
+                    </div>
+                    <Link
+                        href={boutique()}
+                        className="hidden shrink-0 items-center gap-2 rounded-full border border-event-border px-6 py-3 font-bold text-event-fg transition hover:border-event-accent hover:text-event-accent-ink sm:inline-flex"
+                    >
+                        Voir la boutique
+                        <ArrowRight className="size-5" />
+                    </Link>
+                </div>
+
+                <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+                    {products.slice(0, 4).map((product) => (
+                        <Link
+                            key={product.id}
+                            href={boutique()}
+                            className="group overflow-hidden rounded-2xl border border-event-border bg-event-surface"
                         >
-                            <Icon className="size-6 text-event-accent-ink" />
-                            <h3 className="mt-4 text-lg font-bold text-event-fg">
-                                {title}
-                            </h3>
-                            <p className="mt-2 text-sm leading-relaxed text-event-muted">
-                                {text}
-                            </p>
-                        </div>
+                            <img
+                                src={product.image}
+                                alt={product.name}
+                                loading="lazy"
+                                className="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
+                            />
+                            <div className="p-3">
+                                <p className="truncate text-sm font-semibold text-event-fg">
+                                    {product.name}
+                                </p>
+                                <p className="text-sm text-event-accent-ink">
+                                    {formatPrice(product.price)}
+                                </p>
+                            </div>
+                        </Link>
                     ))}
                 </div>
+
+                <Link
+                    href={boutique()}
+                    className="mt-6 flex items-center justify-center gap-2 rounded-full bg-event-accent px-6 py-3.5 font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110 sm:hidden"
+                >
+                    <ShoppingBag className="size-5" />
+                    Voir la boutique
+                </Link>
             </section>
 
             <section className="mt-16 rounded-3xl border border-event-border bg-white px-5 py-8 text-center sm:p-12">
