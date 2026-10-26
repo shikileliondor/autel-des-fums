@@ -43,13 +43,6 @@ export default function EventNavbar() {
                     ))}
                 </ul>
 
-                <Link
-                    href={create()}
-                    className="hidden rounded-xl bg-event-fg px-5 py-3 text-xs font-bold tracking-[0.12em] text-white uppercase transition hover:bg-event-accent md:inline-flex"
-                >
-                    Je m’inscris
-                </Link>
-
                 <button
                     type="button"
                     aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}

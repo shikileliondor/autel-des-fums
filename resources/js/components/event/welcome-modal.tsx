@@ -53,18 +53,11 @@ export default function WelcomeModal() {
                 <DialogOverlay className="bg-black/60 backdrop-blur-sm" />
                 <DialogPrimitive.Content className="fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 overflow-hidden overflow-y-auto rounded-[2rem] border-4 border-white bg-white shadow-2xl duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 md:grid-cols-[1fr_16rem]">
                     <div className="relative flex flex-col items-center px-5 pt-20 pb-10 text-center sm:px-12 sm:py-12">
-                        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-                            <img
-                                src="/image/logo-foursquare-niangon.png"
-                                alt="Église Évangélique Foursquare Niangon Révélation"
-                                className="h-8 w-auto sm:h-11"
-                            />
-                            <img
-                                src="/image/logo-autel-des-parfums-dark.png"
-                                alt={event.name}
-                                className="h-9 w-auto sm:h-12"
-                            />
-                        </div>
+                        <img
+                            src="/image/logo-autel-des-parfums-dark.png"
+                            alt={event.name}
+                            className="h-9 w-auto sm:h-12"
+                        />
 
                         <p className="mt-8 text-[10px] font-bold tracking-[0.3em] text-event-muted uppercase sm:text-xs">
                             {event.hostChurch}

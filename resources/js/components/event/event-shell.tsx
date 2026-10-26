@@ -23,18 +23,7 @@ export function formatEventDate(startsAt: string | null): string | null {
 
 export function EventLogo({ className }: { className?: string }) {
     return (
-        <Link
-            href={home()}
-            className={cn(
-                'flex shrink-0 items-center gap-3 sm:gap-5',
-                className,
-            )}
-        >
-            <img
-                src="/image/logo-foursquare-niangon.png"
-                alt="Église Évangélique Foursquare Niangon Révélation"
-                className="h-7 w-auto sm:h-10"
-            />
+        <Link href={home()} className={cn('block shrink-0', className)}>
             <img
                 src="/image/logo-autel-des-parfums-dark.png"
                 alt="L’Autel des Parfums"
