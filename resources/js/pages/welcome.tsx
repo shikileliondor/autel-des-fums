@@ -72,7 +72,7 @@ export default function Welcome() {
                     <p className="mb-4 text-xs font-bold tracking-[0.3em] text-event-accent-ink uppercase sm:text-sm">
                         — {event.tagline}
                     </p>
-                    <h1 className="text-[2.75rem] leading-[1.02] font-extrabold tracking-tight text-event-fg sm:text-7xl">
+                    <h1 className="font-charm text-[3rem] leading-[1.1] font-bold text-event-fg sm:text-7xl">
                         L’Autel
                         <span className="block text-event-accent">
                             des Parfums

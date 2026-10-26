@@ -16,6 +16,10 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600, 700, 800],
                 }),
+                // Titre « L'Autel des Parfums » de la page d'accueil.
+                bunny('Charm', {
+                    weights: [400, 700],
+                }),
             ],
         }),
         inertia(),
