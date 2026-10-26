@@ -9,33 +9,12 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { whatsappNumber } from '@/components/event/whatsapp-button';
-import { formatPrice, products } from '@/lib/boutique';
-import type { Product } from '@/lib/boutique';
+import { formatPrice, loadCart, products, saveCart } from '@/lib/boutique';
+import type { CartLine, Product } from '@/lib/boutique';
 import { cn } from '@/lib/utils';
-
-type CartLine = {
-    key: string;
-    productId: string;
-    size: string | null;
-    /** Texte à floquer, null pour la version standard. */
-    custom: string | null;
-    quantity: number;
-};
-
-const STORAGE_KEY = 'adp-panier-v2';
 
 function linePrice(product: Product, custom: string | null): number {
     return custom && product.customPrice ? product.customPrice : product.price;
-}
-
-function loadCart(): CartLine[] {
-    try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-
-        return raw ? (JSON.parse(raw) as CartLine[]) : [];
-    } catch {
-        return [];
-    }
 }
 
 const label =
@@ -251,12 +230,7 @@ export default function Boutique() {
 
     const update = (next: CartLine[]) => {
         setCart(next);
-
-        try {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        } catch {
-            // Panier non conservé (navigation privée) : sans conséquence.
-        }
+        saveCart(next);
     };
 
     const add = (

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 export type Product = {
     id: string;
     name: string;
@@ -34,4 +36,59 @@ export const products: Product[] = COLORS.map(([slug, label]) => ({
 
 export function formatPrice(price: number): string {
     return `${new Intl.NumberFormat('fr-FR').format(price)} F CFA`;
+}
+
+export type CartLine = {
+    key: string;
+    productId: string;
+    size: string | null;
+    /** Texte à floquer, null pour la version standard. */
+    custom: string | null;
+    quantity: number;
+};
+
+const STORAGE_KEY = 'adp-panier-v2';
+
+// Émis à chaque modification pour mettre à jour l'icône du panier dans la barre de navigation.
+const CHANGE_EVENT = 'adp-panier-change';
+
+export function loadCart(): CartLine[] {
+    try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+
+        return raw ? (JSON.parse(raw) as CartLine[]) : [];
+    } catch {
+        return [];
+    }
+}
+
+export function saveCart(cart: CartLine[]): void {
+    try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+    } catch {
+        // Panier non conservé (navigation privée) : sans conséquence.
+    }
+
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+/** Nombre d'articles du panier, tenu à jour (y compris depuis un autre onglet). */
+export function useCartCount(): number {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        const refresh = () =>
+            setCount(loadCart().reduce((sum, line) => sum + line.quantity, 0));
+
+        refresh();
+        window.addEventListener(CHANGE_EVENT, refresh);
+        window.addEventListener('storage', refresh);
+
+        return () => {
+            window.removeEventListener(CHANGE_EVENT, refresh);
+            window.removeEventListener('storage', refresh);
+        };
+    }, []);
+
+    return count;
 }

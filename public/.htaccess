@@ -28,3 +28,18 @@
 <Files ".ftp-deploy-sync-state.json">
     Require all denied
 </Files>
+
+# Performance under load: compress text responses and let browsers cache static files.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Only the Vite build ships .js/.css/.woff2 here, with a content hash in the name: cache for a year.
+    <FilesMatch "\.(js|css|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(jpe?g|png|webp|svg|ico)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

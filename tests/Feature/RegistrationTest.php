@@ -3,6 +3,7 @@
 use App\Mail\RegistrationConfirmed;
 use App\Models\Registration;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function validRegistration(array $overrides = []): array
@@ -93,6 +94,7 @@ test('the pdf downloads automatically right after registering, not on reload', f
 });
 
 test('the confirmation can be downloaded as a pdf', function () {
+    Storage::fake('local');
     $this->post(route('registration.store'), validRegistration());
 
     $reference = Registration::sole()->reference;
@@ -162,4 +164,35 @@ test('the boutique page can be displayed', function () {
     $this->get(route('boutique'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('boutique'));
+});
+
+test('the pdf is generated once then served from disk', function () {
+    Storage::fake('local');
+    $this->post(route('registration.store'), validRegistration());
+    $path = 'pdf/inscription-'.Registration::sole()->reference.'.pdf';
+
+    $this->get(route('registration.pdf'))->assertOk();
+    Storage::disk('local')->assertExists($path);
+
+    Storage::disk('local')->put($path, 'cached');
+    expect($this->get(route('registration.pdf'))->streamedContent())->toBe('cached');
+});
+
+test('many people on the same network can register in the same minute', function () {
+    foreach (range(1, 15) as $i) {
+        $this->post(route('registration.store'), validRegistration([
+            'phone' => '+22507000000'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+        ]))->assertRedirect(route('registration.confirmed'));
+    }
+
+    expect(Registration::count())->toBe(15);
+});
+
+test('the same phone is limited to a few attempts per minute', function () {
+    foreach (range(1, 5) as $i) {
+        $this->post(route('registration.store'), validRegistration(['first_name' => '']));
+    }
+
+    $this->post(route('registration.store'), validRegistration())
+        ->assertSessionHasErrors(['phone' => 'Trop de tentatives. Patiente une minute puis réessaie.']);
 });

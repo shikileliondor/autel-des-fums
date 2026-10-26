@@ -6,14 +6,16 @@ use App\Http\Requests\StoreRegistrationRequest;
 use App\Mail\RegistrationConfirmed;
 use App\Models\Registration;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 use function Illuminate\Support\defer;
@@ -33,7 +35,13 @@ class RegistrationController extends Controller
      */
     public function store(StoreRegistrationRequest $request): RedirectResponse
     {
-        $registration = Registration::create($request->validated());
+        try {
+            $registration = Registration::create($request->validated());
+        } catch (UniqueConstraintViolationException) {
+            // Same phone submitted twice at the same moment (double tap, two devices):
+            // the unique index rejects the second one, show the usual message instead of an error page.
+            return back()->withInput()->withErrors(['phone' => 'Ce numéro de téléphone est déjà inscrit.']);
+        }
 
         if ($registration->email) {
             // Sent after the response so a slow or failing SMTP server never blocks the registration.
@@ -76,7 +84,7 @@ class RegistrationController extends Controller
     /**
      * Download the confirmation of the registration just submitted as a PDF.
      */
-    public function pdf(Request $request): HttpResponse|RedirectResponse
+    public function pdf(Request $request): StreamedResponse|RedirectResponse
     {
         $registration = Registration::find((int) $request->session()->get('registration_id'));
 
@@ -84,6 +92,25 @@ class RegistrationController extends Controller
             return to_route('registration.create');
         }
 
+        // Generated once per registration, then served from disk: dompdf is the heaviest
+        // part of the site and the PDF is requested automatically after each registration.
+        $path = "pdf/inscription-{$registration->reference}.pdf";
+        $disk = Storage::disk('local');
+
+        if (! $disk->exists($path)) {
+            $disk->put($path, $this->renderPdf($registration));
+        }
+
+        return $disk->download($path, "inscription-{$registration->reference}.pdf", [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
+    /**
+     * Render the registration confirmation PDF.
+     */
+    private function renderPdf(Registration $registration): string
+    {
         $startsAt = config('event.starts_at');
 
         return Pdf::loadView('pdf.registration', [
@@ -95,6 +122,6 @@ class RegistrationController extends Controller
                 ))
                 : null,
             'place' => collect([config('event.venue'), config('event.city')])->filter()->implode(', '),
-        ])->download("inscription-{$registration->reference}.pdf");
+        ])->output();
     }
 }

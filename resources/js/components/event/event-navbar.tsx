@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, X } from 'lucide-react';
+import { Menu, ShoppingBag, X } from 'lucide-react';
 import { useState } from 'react';
 import { EventLogo } from '@/components/event/event-shell';
+import { useCartCount } from '@/lib/boutique';
 import { cn } from '@/lib/utils';
 import { boutique, home } from '@/routes';
 import { create } from '@/routes/registration';
@@ -15,6 +16,7 @@ const links = [
 export default function EventNavbar() {
     const { url } = usePage();
     const [open, setOpen] = useState(false);
+    const cartCount = useCartCount();
     const path = url.split('?')[0];
 
     const isActive = (href: string) =>
@@ -43,19 +45,34 @@ export default function EventNavbar() {
                     ))}
                 </ul>
 
-                <button
-                    type="button"
-                    aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
-                    aria-expanded={open}
-                    onClick={() => setOpen(!open)}
-                    className="flex size-12 items-center justify-center rounded-xl bg-event-fg text-white md:hidden"
-                >
-                    {open ? (
-                        <X className="size-6" />
-                    ) : (
-                        <Menu className="size-6" />
-                    )}
-                </button>
+                <div className="flex items-center gap-2">
+                    <Link
+                        href={`${boutique().url}#panier`}
+                        aria-label={`Panier (${cartCount} article${cartCount > 1 ? 's' : ''})`}
+                        className="relative flex size-12 items-center justify-center rounded-xl text-event-fg transition hover:text-event-accent-ink"
+                    >
+                        <ShoppingBag className="size-6" />
+                        {cartCount > 0 && (
+                            <span className="absolute top-1.5 right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-event-accent px-1 text-[11px] font-bold text-white tabular-nums">
+                                {cartCount}
+                            </span>
+                        )}
+                    </Link>
+
+                    <button
+                        type="button"
+                        aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+                        aria-expanded={open}
+                        onClick={() => setOpen(!open)}
+                        className="flex size-12 items-center justify-center rounded-xl bg-event-fg text-white md:hidden"
+                    >
+                        {open ? (
+                            <X className="size-6" />
+                        ) : (
+                            <Menu className="size-6" />
+                        )}
+                    </button>
+                </div>
             </nav>
 
             {open && (

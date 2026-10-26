@@ -15,7 +15,7 @@ Route::inertia('boutique', 'boutique')->name('boutique');
 
 Route::get('inscription', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('inscription', [RegistrationController::class, 'store'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:registrations')
     ->name('registration.store');
 Route::get('inscription/confirmee', [RegistrationController::class, 'confirmed'])->name('registration.confirmed');
 Route::get('inscription/confirmee/pdf', [RegistrationController::class, 'pdf'])->name('registration.pdf');

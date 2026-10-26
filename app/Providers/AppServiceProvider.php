@@ -4,9 +4,12 @@ namespace App\Providers;
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -32,6 +35,26 @@ class AppServiceProvider extends ServiceProvider
             config('event.admin_emails'),
             true,
         ));
+
+        $this->configureRegistrationRateLimit();
+    }
+
+    /**
+     * Many people register from the same IP (church Wi-Fi, mobile carrier NAT),
+     * so the per-IP limit stays high; the tight limit is per phone number.
+     */
+    protected function configureRegistrationRateLimit(): void
+    {
+        RateLimiter::for('registrations', function (Request $request) {
+            $tooMany = fn () => back()->withInput()->withErrors([
+                'phone' => 'Trop de tentatives. Patiente une minute puis réessaie.',
+            ]);
+
+            return [
+                Limit::perMinute(300)->by('ip:'.$request->ip())->response($tooMany),
+                Limit::perMinute(5)->by('phone:'.preg_replace('/\D/', '', (string) $request->input('phone')))->response($tooMany),
+            ];
+        });
     }
 
     /**

@@ -8,6 +8,11 @@ import { formatPrice, products } from '@/lib/boutique';
 import { boutique } from '@/routes';
 import { create } from '@/routes/registration';
 
+// Église Foursquare Niangon Révélation, Abidjan.
+const MAP_URL = 'https://maps.app.goo.gl/4AziMiFafT5arnM77';
+const MAP_EMBED_URL =
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d894.8501701837606!2d-4.107708210679409!3d5.338199524430247!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xfc1c190231bf1bd%3A0xce333398bde1a53!2zw4lnbGlzZSDDqXZhbmfDqWxpcXVlIEZvdXJzcXVhcmUgbmlhbmdvbiByw6l2w6lsYXRpb24!5e1!3m2!1sfr!2sci!4v1793033265098!5m2!1sfr!2sci';
+
 const photos = [
     {
         src: '/image/souvenirs/souvenir-5.jpg',
@@ -142,7 +147,27 @@ export default function Welcome() {
                             {event.venue ?? 'Lieu bientôt annoncé'}
                         </p>
                         <p className="text-sm text-event-muted">{event.city}</p>
+                        <a
+                            href={MAP_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-event-accent-ink hover:text-event-fg"
+                        >
+                            Voir l’itinéraire
+                            <ArrowRight className="size-3.5" />
+                        </a>
                     </div>
+                </div>
+
+                <div className="overflow-hidden rounded-3xl border border-event-border sm:col-span-2">
+                    <iframe
+                        src={MAP_EMBED_URL}
+                        title="Plan d’accès : Église Foursquare Niangon Révélation"
+                        className="block h-72 w-full sm:h-96"
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                    />
                 </div>
             </section>
 
@@ -213,7 +238,7 @@ export default function Welcome() {
                 </p>
                 <Link
                     href={create()}
-                    className="mt-8 inline-flex items-center gap-2 rounded-full bg-event-fg px-8 py-4 font-bold text-white transition hover:bg-event-fg/90"
+                    className="mt-8 inline-flex items-center gap-2 rounded-full bg-event-accent px-8 py-4 font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110"
                 >
                     Je m’inscris
                     <ArrowRight className="size-5" />
