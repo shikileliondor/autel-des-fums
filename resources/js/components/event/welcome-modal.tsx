@@ -131,7 +131,7 @@ export default function WelcomeModal() {
                     </div>
 
                     {event.startsAt && (
-                        <p className="bg-event-fg px-6 py-4 text-center text-lg font-extrabold text-white md:hidden">
+                        <p className="bg-event-fg px-6 py-4 text-center text-lg font-extrabold text-white first-letter:uppercase md:hidden">
                             {datePart(event.startsAt, {
                                 weekday: 'long',
                                 day: 'numeric',

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -87,9 +88,9 @@ class RegistrationController extends Controller
             'registration' => $registration,
             'eventName' => config('event.name'),
             'startsAt' => $startsAt
-                ? Carbon::parse($startsAt)->settings(['locale' => 'fr'])->translatedFormat(
+                ? Str::ucfirst(Carbon::parse($startsAt)->settings(['locale' => 'fr'])->translatedFormat(
                     str_contains($startsAt, ':') ? 'l j F Y \à H\hi' : 'l j F Y'
-                )
+                ))
                 : null,
             'place' => collect([config('event.venue'), config('event.city')])->filter()->implode(', '),
         ])->download("inscription-{$registration->reference}.pdf");

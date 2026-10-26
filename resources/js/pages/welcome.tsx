@@ -48,6 +48,8 @@ export default function Welcome() {
               timeZone: EVENT_TIMEZONE,
           }).format(new Date(event.startsAt))
         : 'Date bientôt annoncée';
+    // « Dimanche », pas « dimanche » : Intl renvoie le jour en minuscule.
+    const displayDate = date.charAt(0).toUpperCase() + date.slice(1);
 
     const minPrice = Math.min(...products.map((product) => product.price));
 
@@ -78,7 +80,7 @@ export default function Welcome() {
                     </h1>
                 </div>
                 <p className="mx-auto max-w-md text-base leading-relaxed text-event-muted sm:text-lg lg:mx-0 lg:max-w-sm lg:text-right">
-                    <span className="first-letter:uppercase">{date}</span>
+                    <span>{displayDate}</span>
                     {time && <> à {time}</>} —{' '}
                     {[event.venue, event.city].filter(Boolean).join(', ')}.{' '}
                     {event.hostChurch}.
@@ -120,8 +122,8 @@ export default function Welcome() {
                         <p className="text-xs font-bold tracking-[0.18em] text-event-muted uppercase">
                             Quand
                         </p>
-                        <p className="mt-1 text-lg font-bold text-event-fg first-letter:uppercase">
-                            {date}
+                        <p className="mt-1 text-lg font-bold text-event-fg">
+                            {displayDate}
                         </p>
                         {time && (
                             <p className="text-sm text-event-muted">

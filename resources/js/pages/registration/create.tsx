@@ -7,7 +7,7 @@ import { privacy } from '@/routes';
 import { store } from '@/routes/registration';
 
 const inputClass =
-    'h-12 w-full rounded-xl border border-event-border bg-event-surface px-4 text-base text-event-fg placeholder:text-event-muted/60 outline-none transition focus:border-event-accent focus:ring-2 focus:ring-event-accent/30 aria-invalid:border-red-500';
+    'h-12 w-full rounded-xl border border-event-border bg-event-surface px-4 text-[16px] text-event-fg placeholder:text-event-muted/60 outline-none transition focus:border-event-accent focus:ring-2 focus:ring-event-accent/30 aria-invalid:border-red-500';
 
 function Field({
     label,

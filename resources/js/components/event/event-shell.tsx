@@ -43,7 +43,7 @@ export default function EventShell({
     const { event } = usePage().props;
 
     return (
-        <div className="relative min-h-screen overflow-x-clip bg-event-bg font-sans text-event-fg antialiased scheme-light">
+        <div className="event-site relative min-h-screen overflow-x-clip bg-event-bg font-sans text-event-fg antialiased scheme-light">
             <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 sm:px-10">
                 <EventNavbar />
 

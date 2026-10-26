@@ -142,6 +142,15 @@
     --sidebar-ring: #f9731a;
 }
 
+/*
+ * Site public : tout est un peu plus compact (15 px au lieu de 16 px). Les tailles
+ * Tailwind étant en rem, la page entière se réduit de façon homogène.
+ * L'espace organisateurs n'est pas concerné.
+ */
+:root:has(.event-site) {
+    font-size: 93.75%;
+}
+
 @layer base {
     * {
         @apply border-border;
