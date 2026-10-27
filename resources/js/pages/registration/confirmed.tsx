@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import ContactPeople from '@/components/event/contact-people';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
+import { cn } from '@/lib/utils';
 import { home } from '@/routes';
 import { create, pdf } from '@/routes/registration';
 
@@ -63,7 +64,7 @@ export default function RegistrationConfirmed({
         `Je suis ${isWoman ? 'la' : 'le'} ${ordinal} ${worshipper}.`,
         `« ${event.theme} »`,
         '',
-        `Inscris-toi toi aussi 👉 ${window.location.origin}${create.url()}`,
+        `Inscris-toi toi aussi 👉 ${window.location.origin}${create.url({ query: { via: 'partage' } })}`,
     ].join('\n');
 
     return (
@@ -156,14 +157,45 @@ function ordinalOf(rank: number, isWoman: boolean): string {
     return `${rank}ᵉ`;
 }
 
+// L'affiche officielle, jointe en photo quand le téléphone sait partager des fichiers.
+const POSTER_URL = '/image/souvenirs/souvenir-5.jpeg';
+
+const buttonClass =
+    'inline-flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition';
+
 function ShareActions({ message }: { message: string }) {
     const [copied, setCopied] = useState(false);
+    const [poster, setPoster] = useState<File | null>(null);
     const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-    const share = () => {
-        // L'utilisateur peut fermer le menu de partage : ce n'est pas une erreur.
-        navigator.share({ text: message }).catch(() => {});
-    };
+    // Préchargée : le partage doit partir dès le clic, sinon Safari le refuse.
+    useEffect(() => {
+        if (!navigator.canShare) {
+            return;
+        }
+
+        let cancelled = false;
+
+        fetch(POSTER_URL)
+            .then((response) => response.blob())
+            .then((blob) => {
+                const file = new File([blob], 'autel-des-parfums.jpg', {
+                    type: 'image/jpeg',
+                });
+
+                if (!cancelled && navigator.canShare({ files: [file] })) {
+                    setPoster(file);
+                }
+            })
+            .catch(() => {});
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // L'utilisateur peut fermer le menu de partage : ce n'est pas une erreur.
+    const share = (data: ShareData) => navigator.share(data).catch(() => {});
 
     const copy = async () => {
         try {
@@ -181,16 +213,46 @@ function ShareActions({ message }: { message: string }) {
                 Dis-le à tes proches 🔥
             </h2>
             <p className="mt-1 text-sm text-event-muted">
-                Publie-le en statut WhatsApp et invite-les à venir adorer avec
-                toi.
+                Publie l’affiche en statut WhatsApp et invite-les à venir adorer
+                avec toi.
             </p>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {poster && (
+                <button
+                    type="button"
+                    onClick={() => share({ files: [poster], text: message })}
+                    className={cn(
+                        buttonClass,
+                        'mt-4 h-auto w-full gap-4 bg-event-accent p-3 text-left text-white hover:opacity-90',
+                    )}
+                >
+                    <img
+                        src={POSTER_URL}
+                        alt=""
+                        className="h-20 w-15 shrink-0 rounded-lg object-cover"
+                    />
+                    <span className="flex-1">
+                        <span className="block text-base">
+                            Partager avec l’affiche
+                        </span>
+                        <span className="block text-xs font-medium opacity-90">
+                            Statut WhatsApp, discussions, Facebook…
+                        </span>
+                    </span>
+                    <Share2 className="mr-2 size-5 shrink-0" />
+                </button>
+            )}
+
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 <a
-                    href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+                    // api.whatsapp.com garde les emojis intacts (wa.me les casse sur ordinateur).
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25d366] text-sm font-bold text-white transition hover:brightness-105"
+                    className={cn(
+                        buttonClass,
+                        'bg-[#25d366] text-white hover:brightness-105',
+                    )}
                 >
                     <svg
                         viewBox="0 0 24 24"
@@ -200,14 +262,17 @@ function ShareActions({ message }: { message: string }) {
                     >
                         <path d="M12.05 21.5h-.01a9.4 9.4 0 0 1-4.8-1.31l-.34-.2-3.57.93.95-3.48-.22-.36a9.4 9.4 0 0 1-1.44-5.02c0-5.2 4.23-9.43 9.44-9.43 2.52 0 4.89.98 6.67 2.77a9.37 9.37 0 0 1 2.76 6.67c0 5.2-4.23 9.43-9.44 9.43m8.03-17.46A11.27 11.27 0 0 0 12.05.72C5.8.72.7 5.8.7 12.06c0 2 .52 3.95 1.52 5.66L.6 23.6l6.03-1.58a11.3 11.3 0 0 0 5.42 1.38h.01c6.26 0 11.35-5.09 11.35-11.34 0-3.03-1.18-5.88-3.33-8.02" />
                     </svg>
-                    Partager sur WhatsApp
+                    {poster ? 'Message WhatsApp' : 'Partager sur WhatsApp'}
                 </a>
 
-                {canShare ? (
+                {canShare && !poster ? (
                     <button
                         type="button"
-                        onClick={share}
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-event-fg text-sm font-bold text-white transition hover:opacity-90"
+                        onClick={() => share({ text: message })}
+                        className={cn(
+                            buttonClass,
+                            'bg-event-fg text-white hover:opacity-90',
+                        )}
                     >
                         <Share2 className="size-4" />
                         Partager ailleurs
@@ -216,7 +281,10 @@ function ShareActions({ message }: { message: string }) {
                     <button
                         type="button"
                         onClick={copy}
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-event-fg text-sm font-bold text-white transition hover:opacity-90"
+                        className={cn(
+                            buttonClass,
+                            'bg-event-fg text-white hover:opacity-90',
+                        )}
                     >
                         {copied ? (
                             <Check className="size-4" />
@@ -227,6 +295,16 @@ function ShareActions({ message }: { message: string }) {
                     </button>
                 )}
             </div>
+
+            {!poster && (
+                <a
+                    href={POSTER_URL}
+                    download="autel-des-parfums.jpg"
+                    className="mt-3 inline-block text-sm font-semibold text-event-accent-ink hover:text-event-fg"
+                >
+                    Télécharger l’affiche pour ton statut
+                </a>
+            )}
         </section>
     );
 }

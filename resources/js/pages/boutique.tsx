@@ -309,7 +309,7 @@ export default function Boutique() {
 
     const canOrder = lines.length > 0 && customer.trim() !== '';
     const orderUrl = event.contactPhone
-        ? `https://wa.me/${whatsappNumber(event.contactPhone)}?text=${encodeURIComponent(message)}`
+        ? `https://api.whatsapp.com/send?phone=${whatsappNumber(event.contactPhone)}&text=${encodeURIComponent(message)}`
         : null;
 
     // WhatsApp s'ouvre dans un nouvel onglet ; ici on confirme et on repart de zéro
