@@ -26,7 +26,9 @@ class StoreRegistrationRequest extends FormRequest
             'email' => $this->filled('email') ? strtolower(trim((string) $this->input('email'))) : null,
             'church' => $church,
             'church_group' => Registration::churchGroupFor($isHostMember, $church),
-            'role' => trim((string) $this->input('role')) ?: null,
+            'role' => $this->input('role_choice') === 'autre'
+                ? (trim((string) $this->input('role_other')) ?: null)
+                : ($this->input('role_choice') ?: null),
         ]);
     }
 
@@ -45,6 +47,8 @@ class StoreRegistrationRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'church' => ['nullable', 'string', 'max:150'],
             'church_group' => ['required', Rule::in(array_keys(Registration::CHURCH_GROUPS))],
+            'role_choice' => ['nullable', Rule::in([...Registration::ROLES, 'autre'])],
+            'role_other' => ['required_if:role_choice,autre', 'nullable', 'string', 'max:100'],
             'role' => ['nullable', 'string', 'max:100'],
         ];
     }
@@ -64,6 +68,8 @@ class StoreRegistrationRequest extends FormRequest
             'phone.regex' => 'Le numéro de téléphone n’est pas valide.',
             'phone.unique' => 'Ce numéro de téléphone est déjà inscrit.',
             'email.email' => 'L’adresse e-mail n’est pas valide.',
+            'role_choice.in' => 'Choisis une fonction dans la liste.',
+            'role_other.required_if' => 'Précise ta fonction.',
         ];
     }
 

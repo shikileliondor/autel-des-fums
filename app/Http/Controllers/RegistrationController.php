@@ -36,7 +36,7 @@ class RegistrationController extends Controller
     public function store(StoreRegistrationRequest $request): RedirectResponse
     {
         try {
-            $registration = Registration::create($request->validated());
+            $registration = Registration::create($request->safe()->except(['role_choice', 'role_other']));
         } catch (UniqueConstraintViolationException) {
             // Same phone submitted twice at the same moment (double tap, two devices):
             // the unique index rejects the second one, show the usual message instead of an error page.

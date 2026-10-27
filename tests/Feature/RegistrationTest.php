@@ -170,10 +170,25 @@ test('the category cannot be forced by the visitor', function () {
     expect(Registration::sole()->church_group)->toBe(Registration::GROUP_GUEST);
 });
 
-test('the role is optional and saved when given', function () {
-    $this->post(route('registration.store'), validRegistration(['role' => '  Choriste ']));
+test('the role is picked from the list, and is optional', function () {
+    $this->post(route('registration.store'), validRegistration(['role_choice' => 'Chantre']));
+    $this->post(route('registration.store'), validRegistration(['phone' => '+2250102030405']));
 
-    expect(Registration::sole()->role)->toBe('Choriste');
+    expect(Registration::pluck('role')->all())->toBe(['Chantre', null]);
+});
+
+test('another role is typed under Autre', function () {
+    $this->post(route('registration.store'), validRegistration(['role_choice' => 'autre', 'role_other' => '']))
+        ->assertSessionHasErrors(['role_other' => 'Précise ta fonction.']);
+
+    $this->post(route('registration.store'), validRegistration(['role_choice' => 'autre', 'role_other' => '  Protocole ']));
+
+    expect(Registration::sole()->role)->toBe('Protocole');
+});
+
+test('a role outside the list is refused', function () {
+    $this->post(route('registration.store'), validRegistration(['role_choice' => 'Pasteur principal']))
+        ->assertSessionHasErrors(['role_choice' => 'Choisis une fonction dans la liste.']);
 });
 
 test('the privacy page shows the contact details', function () {

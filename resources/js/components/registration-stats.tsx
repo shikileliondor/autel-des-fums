@@ -114,6 +114,25 @@ export default function RegistrationStats({
                     })}
                 </div>
             </div>
+
+            <div className="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+                <p className="text-sm font-medium">Par fonction</p>
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                    {stats.roles.map((role) => (
+                        <div
+                            key={role.label}
+                            className="rounded-lg bg-muted/40 p-3"
+                        >
+                            <p className="truncate text-sm text-muted-foreground">
+                                {role.label}
+                            </p>
+                            <p className="mt-1 text-2xl font-semibold tabular-nums">
+                                {role.count}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }

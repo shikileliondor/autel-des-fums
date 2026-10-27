@@ -100,3 +100,16 @@ test('the export includes the church category', function () {
 
     expect($csv)->toContain('Catégorie')->toContain('Foursquare Révélation');
 });
+
+test('admins see registrations split by role', function () {
+    $admin = User::factory()->create(['email' => 'admin@example.com']);
+    Registration::factory()->count(2)->create(['role' => 'Chantre']);
+    Registration::factory()->create(['role' => 'Protocole']);
+    Registration::factory()->create(['role' => null]);
+
+    $this->actingAs($admin)
+        ->get(route('registrations.index', $admin->currentTeam))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('stats.roles.0', ['label' => 'Chantre', 'count' => 2])
+            ->where('stats.roles.4', ['label' => 'Autre', 'count' => 1]));
+});

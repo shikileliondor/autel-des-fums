@@ -3,8 +3,12 @@ import { useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import EventShell from '@/components/event/event-shell';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import { privacy } from '@/routes';
 import { store } from '@/routes/registration';
+
+// Doit rester identique à Registration::ROLES côté serveur.
+const ROLES = ['Chantre', 'Commando', 'Service d’ordre', 'Intercession'];
 
 const inputClass =
     'h-12 w-full rounded-xl border border-event-border bg-event-surface px-4 text-[16px] text-event-fg placeholder:text-event-muted/60 outline-none transition focus:border-event-accent focus:ring-2 focus:ring-event-accent/30 aria-invalid:border-red-500';
@@ -57,6 +61,7 @@ function Field({
 
 export default function RegistrationCreate() {
     const [isMember, setIsMember] = useState(false);
+    const [role, setRole] = useState('');
 
     return (
         <EventShell>
@@ -172,20 +177,63 @@ export default function RegistrationCreate() {
                                     <Field
                                         label="Précisez votre église"
                                         name="church"
-                                        placeholder="Ex. Foursquare Sideci, Église Baptiste…"
+                                        placeholder="Ex. Foursquare Ananeraie, Foursquare Toits Rouges…"
                                         error={errors.church}
                                         optional
                                     />
                                 )}
                             </div>
 
-                            <Field
-                                label="Fonction / rôle"
-                                name="role"
-                                placeholder="Ex. choriste, diacre, intercesseur…"
-                                error={errors.role}
-                                optional
-                            />
+                            <div className="grid gap-3">
+                                <div className="grid gap-2">
+                                    <label
+                                        htmlFor="role_choice"
+                                        className="text-sm font-semibold text-event-fg"
+                                    >
+                                        Fonction / rôle
+                                        <span className="ml-1 font-normal text-event-muted">
+                                            (facultatif)
+                                        </span>
+                                    </label>
+                                    <select
+                                        id="role_choice"
+                                        name="role_choice"
+                                        value={role}
+                                        onChange={(e) =>
+                                            setRole(e.target.value)
+                                        }
+                                        aria-invalid={!!errors.role_choice}
+                                        className={cn(
+                                            inputClass,
+                                            !role && 'text-event-muted/60',
+                                        )}
+                                    >
+                                        <option value="">
+                                            Choisis ta fonction
+                                        </option>
+                                        {ROLES.map((r) => (
+                                            <option key={r} value={r}>
+                                                {r}
+                                            </option>
+                                        ))}
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                    {errors.role_choice && (
+                                        <p className="text-sm text-red-600">
+                                            {errors.role_choice}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {role === 'autre' && (
+                                    <Field
+                                        label="Précisez votre fonction"
+                                        name="role_other"
+                                        placeholder="Ex. accueil, technique, protocole…"
+                                        error={errors.role_other}
+                                    />
+                                )}
+                            </div>
 
                             <button
                                 type="submit"

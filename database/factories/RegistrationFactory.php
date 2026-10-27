@@ -25,7 +25,7 @@ class RegistrationFactory extends Factory
             'email' => fake()->optional()->safeEmail(),
             'church' => fake()->optional()->company(),
             'church_group' => Registration::GROUP_GUEST,
-            'role' => fake()->optional()->randomElement(['Choriste', 'Diacre', 'Intercesseur', 'Fidèle']),
+            'role' => fake()->optional()->randomElement(Registration::ROLES),
         ];
     }
 }

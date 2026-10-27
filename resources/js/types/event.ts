@@ -38,4 +38,6 @@ export type RegistrationStats = {
     men: number;
     women: number;
     groups: ChurchGroupStat[];
+    /** Chantre, Commando… puis « Autre » (fonctions précisées à la main). */
+    roles: { label: string; count: number }[];
 };

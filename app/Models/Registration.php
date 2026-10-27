@@ -57,6 +57,9 @@ class Registration extends Model
         };
     }
 
+    /** Roles offered on the form; anything else typed under "Autre" is kept as is. */
+    public const ROLES = ['Chantre', 'Commando', 'Service d’ordre', 'Intercession'];
+
     /** @var array<string, string> Church groups and their labels, in display order. */
     public const CHURCH_GROUPS = [
         self::GROUP_HOST => 'Foursquare Révélation',
@@ -93,7 +96,7 @@ class Registration extends Model
     /**
      * Summary counts shown on the dashboard and the registrations list.
      *
-     * @return array{total: int, today: int, men: int, women: int, groups: list<array{key: string, label: string, count: int}>}
+     * @return array{total: int, today: int, men: int, women: int, groups: list<array{key: string, label: string, count: int}>, roles: list<array{label: string, count: int}>}
      */
     public static function stats(): array
     {
@@ -101,6 +104,23 @@ class Registration extends Model
             ->selectRaw('church_group, COUNT(*) as aggregate')
             ->groupBy('church_group')
             ->pluck('aggregate', 'church_group');
+
+        $byRole = static::query()
+            ->whereNotNull('role')
+            ->selectRaw('role, COUNT(*) as aggregate')
+            ->groupBy('role')
+            ->pluck('aggregate', 'role');
+
+        $roles = array_map(fn (string $role) => [
+            'label' => $role,
+            'count' => (int) ($byRole[$role] ?? 0),
+        ], self::ROLES);
+
+        // Roles typed under "Autre" are grouped together; their names are in the list and export.
+        $roles[] = [
+            'label' => 'Autre',
+            'count' => (int) $byRole->except(self::ROLES)->sum(),
+        ];
 
         return [
             'total' => static::count(),
@@ -112,6 +132,7 @@ class Registration extends Model
                 'label' => self::CHURCH_GROUPS[$key],
                 'count' => (int) ($byGroup[$key] ?? 0),
             ], array_keys(self::CHURCH_GROUPS)),
+            'roles' => $roles,
         ];
     }
 
