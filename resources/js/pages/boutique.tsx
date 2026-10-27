@@ -533,6 +533,7 @@ export default function Boutique() {
                     href="#panier"
                     className={cn(
                         'fixed bottom-4 left-4 z-40 flex h-14 items-center justify-between gap-3 rounded-2xl bg-event-fg px-5 text-white shadow-xl lg:hidden',
+                        // Laisse la place au bouton WhatsApp flottant.
                         event.contactPhone ? 'right-24 sm:right-28' : 'right-4',
                     )}
                 >

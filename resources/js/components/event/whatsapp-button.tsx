@@ -1,11 +1,13 @@
 /**
  * Bouton flottant qui ouvre une discussion WhatsApp avec les organisateurs.
- * Un numéro ivoirien à 10 chiffres reçoit l'indicatif 225.
+ * Un numéro ivoirien sans indicatif (10 chiffres, ou ancien format à 8) reçoit 225.
  */
 export function whatsappNumber(phone: string): string {
     const digits = phone.replace(/\D/g, '');
 
-    return digits.length === 10 ? `225${digits}` : digits;
+    return digits.length === 10 || digits.length === 8
+        ? `225${digits}`
+        : digits;
 }
 
 export default function WhatsAppButton({ phone }: { phone: string }) {

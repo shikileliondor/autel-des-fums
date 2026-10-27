@@ -117,7 +117,7 @@ export default function RegistrationStats({
 
             <div className="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                 <p className="text-sm font-medium">Par fonction</p>
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                     {stats.roles.map((role) => (
                         <div
                             key={role.label}

@@ -8,7 +8,13 @@ import { privacy } from '@/routes';
 import { store } from '@/routes/registration';
 
 // Doit rester identique à Registration::ROLES côté serveur.
-const ROLES = ['Chantre', 'Commando', 'Service d’ordre', 'Intercession'];
+const ROLES = [
+    'Chantre',
+    'Commando',
+    'Service d’ordre',
+    'Intercession',
+    'Communication',
+];
 
 const inputClass =
     'h-12 w-full rounded-xl border border-event-border bg-event-surface px-4 text-[16px] text-event-fg placeholder:text-event-muted/60 outline-none transition focus:border-event-accent focus:ring-2 focus:ring-event-accent/30 aria-invalid:border-red-500';
@@ -142,9 +148,10 @@ export default function RegistrationCreate() {
                                 autoComplete="tel"
                                 defaultValue="+225 "
                                 placeholder="+225 07 00 00 00 00"
-                                // « +225 » seul ne suffit pas : au moins 8 chiffres.
-                                pattern={String.raw`\+?(\D*\d){8,15}\D*`}
-                                title="Indique ton numéro de téléphone (au moins 8 chiffres)."
+                                // +225 (facultatif) puis exactement 10 chiffres, espaces/points/tirets permis.
+                                pattern={String.raw`\s*(\+?225)?[\s.\-]*(\d[\s.\-]*){10}`}
+                                maxLength={20}
+                                title="10 chiffres après +225 (ex. +225 07 01 02 03 04)."
                                 error={errors.phone}
                                 mandatory
                             />

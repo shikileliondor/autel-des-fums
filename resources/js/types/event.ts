@@ -9,7 +9,10 @@ export type EventInfo = {
     venue: string | null;
     hostChurch: string;
     contactEmail: string;
+    /** Numéro unique, WhatsApp et appels (ancien format à 8 chiffres). */
     contactPhone: string | null;
+    /** Personnes à contacter en cas de besoin (config/event.php). */
+    contacts: { name: string; phone: string; whatsapp: string }[];
 };
 
 export type RegistrationRow = {

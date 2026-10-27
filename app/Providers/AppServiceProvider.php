@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Requests\StoreRegistrationRequest;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -54,7 +55,8 @@ class AppServiceProvider extends ServiceProvider
 
             return array_filter([
                 Limit::perMinute(300)->by('ip:'.$request->ip())->response($tooMany),
-                Limit::perMinute(5)->by('phone:'.preg_replace('/\D/', '', (string) $request->input('phone')))->response($tooMany),
+                // Same key whatever way the number is written, so the limit can't be dodged.
+                Limit::perMinute(5)->by('phone:'.StoreRegistrationRequest::normalizePhone((string) $request->input('phone')))->response($tooMany),
                 // Each registration emails this address: stops the form being used to flood a mailbox.
                 // Generous enough for a family sharing one address.
                 $email !== '' ? Limit::perHour(10)->by('email:'.$email)->response(fn () => back()->withInput()->withErrors([

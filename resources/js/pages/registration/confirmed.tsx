@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Check, Download } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import ContactPeople from '@/components/event/contact-people';
 import EventShell from '@/components/event/event-shell';
 import { home } from '@/routes';
 import { pdf } from '@/routes/registration';
@@ -88,6 +89,8 @@ export default function RegistrationConfirmed({
                 <p className="mt-8 font-semibold text-event-fg/80">
                     Que Dieu te bénisse abondamment et à très bientôt.
                 </p>
+
+                <ContactPeople className="mt-10 w-full" />
 
                 <Link
                     href={home()}

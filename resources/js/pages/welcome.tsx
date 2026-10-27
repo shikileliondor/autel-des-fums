@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, CalendarDays, MapPin, ShoppingBag } from 'lucide-react';
+import ContactPeople from '@/components/event/contact-people';
 import Countdown from '@/components/event/countdown';
 import DirectionsDialog from '@/components/event/directions-dialog';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
@@ -19,9 +20,9 @@ const MAP_EMBED_URL =
 
 const photos = [
     {
-        src: '/image/souvenirs/souvenir-5.jpg',
-        alt: 'Un fidèle en adoration, les deux mains levées vers le ciel',
-        label: 'Célébration',
+        src: '/image/souvenirs/souvenir-5.jpeg',
+        alt: 'Affiche de L’Autel des Parfums, édition novembre 2026 : dimanche 29 novembre, Église Foursquare Niangon Révélation',
+        label: 'Édition 2026',
     },
     {
         src: '/image/souvenirs/souvenir-1.jpg',
@@ -266,6 +267,8 @@ export default function Welcome() {
                     Voir la boutique
                 </Link>
             </section>
+
+            <ContactPeople className="mt-16" />
 
             <section
                 data-reveal

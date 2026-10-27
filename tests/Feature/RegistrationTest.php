@@ -283,3 +283,27 @@ test('one email address cannot be used to flood a mailbox', function () {
 
     expect(Registration::where('email', 'victime@example.com')->count())->toBe(10);
 });
+
+test('the phone must have exactly 10 digits after +225', function (string $phone) {
+    $this->post(route('registration.store'), validRegistration(['phone' => $phone]))
+        ->assertSessionHasErrors(['phone' => 'Le numéro doit avoir 10 chiffres après +225 (ex. +225 07 01 02 03 04).']);
+})->with([
+    '9 digits' => '+225 07 01 02 03 0',
+    '11 digits' => '+225 07 01 02 03 04 5',
+    'letters' => '+225 07 AB CD EF GH',
+]);
+
+test('every way of writing a number is stored the same way', function (string $phone) {
+    $this->post(route('registration.store'), validRegistration(['phone' => $phone]));
+
+    expect(Registration::sole()->phone)->toBe('+2250701020304');
+})->with(['+225 07 01 02 03 04', '0701020304', '07.01.02.03.04', '00225 07 01 02 03 04', '225 0701020304']);
+
+test('the same number written differently is still a duplicate', function () {
+    $this->post(route('registration.store'), validRegistration(['phone' => '+225 07 01 02 03 04']));
+
+    $this->post(route('registration.store'), validRegistration(['phone' => '07.01.02.03.04', 'email' => 'autre@example.com']))
+        ->assertSessionHasErrors(['phone' => 'Ce numéro de téléphone est déjà inscrit.']);
+
+    expect(Registration::count())->toBe(1);
+});

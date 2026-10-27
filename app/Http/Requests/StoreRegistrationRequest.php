@@ -21,11 +21,8 @@ class StoreRegistrationRequest extends FormRequest
         $isHostMember = $this->boolean('is_member');
         $church = $isHostMember ? Registration::HOST_CHURCH : (trim((string) $this->input('church')) ?: null);
 
-        $phone = preg_replace('/[\s.\-()]/', '', (string) $this->input('phone'));
-
         $this->merge([
-            // The form is prefilled with "+225": that alone means no phone was given.
-            'phone' => in_array($phone, ['+225', '225', '+'], true) ? '' : $phone,
+            'phone' => self::normalizePhone((string) $this->input('phone')),
             'email' => $this->filled('email') ? strtolower(trim((string) $this->input('email'))) : null,
             'church' => $church,
             'church_group' => Registration::churchGroupFor($isHostMember, $church),
@@ -33,6 +30,25 @@ class StoreRegistrationRequest extends FormRequest
                 ? (trim((string) $this->input('role_other')) ?: null)
                 : ($this->input('role_choice') ?: null),
         ]);
+    }
+
+    /**
+     * One storage format for every Ivorian number (+225 followed by its 10 digits),
+     * so "07 01 02 03 04", "+225 0701020304" and "002250701020304" are the same
+     * number for the duplicate check. The form is prefilled with "+225": that alone
+     * means no phone was given.
+     */
+    public static function normalizePhone(string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', $phone) ?? '';
+
+        $local = match (true) {
+            str_starts_with($digits, '00225') => substr($digits, 5),
+            str_starts_with($digits, '225') && strlen($digits) > 10 => substr($digits, 3),
+            default => $digits,
+        };
+
+        return $local === '' || $local === '225' ? '' : '+225'.$local;
     }
 
     /**
@@ -48,7 +64,7 @@ class StoreRegistrationRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:100', self::NAME_PATTERN],
             'last_name' => ['required', 'string', 'max:100', self::NAME_PATTERN],
             'gender' => ['required', Rule::in(Registration::GENDERS)],
-            'phone' => ['required', 'regex:/^\+?[0-9]{8,15}$/', 'unique:registrations,phone'],
+            'phone' => ['required', 'regex:/^\+225[0-9]{10}$/', 'unique:registrations,phone'],
             'email' => ['nullable', 'email', 'max:255'],
             'church' => ['nullable', 'string', 'max:150'],
             'church_group' => ['required', Rule::in(array_keys(Registration::CHURCH_GROUPS))],
@@ -72,7 +88,7 @@ class StoreRegistrationRequest extends FormRequest
             'last_name.regex' => 'Le nom ne doit contenir que des lettres.',
             'gender.in' => 'Veuillez choisir Homme ou Femme.',
             'phone.required' => 'Le numéro de téléphone est obligatoire.',
-            'phone.regex' => 'Le numéro de téléphone n’est pas valide.',
+            'phone.regex' => 'Le numéro doit avoir 10 chiffres après +225 (ex. +225 07 01 02 03 04).',
             'phone.unique' => 'Ce numéro de téléphone est déjà inscrit.',
             'email.email' => 'L’adresse e-mail n’est pas valide.',
             'role_choice.in' => 'Choisis une fonction dans la liste.',

@@ -111,7 +111,7 @@ test('admins see registrations split by role', function () {
         ->get(route('registrations.index', $admin->currentTeam))
         ->assertInertia(fn (Assert $page) => $page
             ->where('stats.roles.0', ['label' => 'Chantre', 'count' => 2])
-            ->where('stats.roles.4', ['label' => 'Autre', 'count' => 1]));
+            ->where('stats.roles.5', ['label' => 'Autre', 'count' => 1]));
 });
 
 test('the export neutralises spreadsheet formulas typed by visitors', function () {

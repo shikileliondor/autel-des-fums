@@ -16,6 +16,10 @@
         td { padding: 8px 0; border-bottom: 1px solid #e7e5e4; }
         td.label { width: 35%; color: #78716c; }
         .footer { margin-top: 36px; text-align: center; font-weight: bold; }
+        .help { margin-top: 28px; padding: 14px 18px; background: #fbf7f3; border-left: 4px solid #f97316; }
+        .help-title { font-weight: bold; margin-bottom: 6px; }
+        .help-list td { padding: 4px 0; border-bottom: none; }
+        .help-phone { text-align: right; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -43,6 +47,17 @@
         @endif
         <tr><td class="label">Inscrit le</td><td>{{ $registration->created_at->locale('fr')->translatedFormat('j F Y') }}</td></tr>
     </table>
+
+    @if (count(config('event.contacts')))
+        <div class="help">
+            <div class="help-title">Un souci ? Besoin de plus d’informations ? Contactez :</div>
+            <table class="help-list">
+                @foreach (config('event.contacts') as $contact)
+                    <tr><td>{{ $contact['name'] }}</td><td class="help-phone">{{ $contact['phone'] }}</td></tr>
+                @endforeach
+            </table>
+        </div>
+    @endif
 
     <p class="footer">Que Dieu te bénisse abondamment et à très bientôt.</p>
 </body>

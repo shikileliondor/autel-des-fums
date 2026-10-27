@@ -18,11 +18,11 @@ export default function PhotoMosaic({ photos }: { photos: MosaicPhoto[] }) {
     }
 
     return (
-        <div className="grid gap-2 sm:gap-3 lg:grid-cols-[1.8fr_2fr]">
+        <div className="grid gap-2 sm:grid-cols-[1.8fr_2fr] sm:gap-3">
             <Tile
                 photo={first}
                 index={0}
-                className="aspect-16/10 lg:aspect-auto lg:h-full"
+                className="aspect-3/4 sm:aspect-auto sm:h-full"
             />
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {rest.map((photo, i) => (

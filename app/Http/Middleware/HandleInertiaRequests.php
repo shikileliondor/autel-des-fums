@@ -60,6 +60,7 @@ class HandleInertiaRequests extends Middleware
                 'hostChurch' => Registration::HOST_CHURCH,
                 'contactEmail' => config('event.contact_email'),
                 'contactPhone' => config('event.contact_phone'),
+                'contacts' => config('event.contacts'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
