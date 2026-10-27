@@ -80,7 +80,17 @@ test('the confirmation page shows the reference of the registration just made', 
         ->assertInertia(fn (Assert $page) => $page
             ->component('registration/confirmed')
             ->where('registration.reference', Registration::sole()->reference)
-            ->where('registration.firstName', 'Ange'));
+            ->where('registration.firstName', 'Ange')
+            ->where('registration.rank', 1));
+});
+
+test('the confirmation tells registrants their rank', function () {
+    Registration::factory()->count(151)->create();
+
+    $this->post(route('registration.store'), validRegistration());
+
+    $this->get(route('registration.confirmed'))
+        ->assertInertia(fn (Assert $page) => $page->where('registration.rank', 152));
 });
 
 test('the pdf downloads automatically right after registering, not on reload', function () {

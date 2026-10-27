@@ -80,6 +80,9 @@ class RegistrationController extends Controller
             'registration' => [
                 'reference' => $registration->reference,
                 'firstName' => $registration->first_name,
+                'gender' => $registration->gender,
+                // "Tu es le 152e adorateur inscrit": position in registration order.
+                'rank' => Registration::where('id', '<=', $registration->id)->count(),
             ],
             'autoDownload' => (bool) $request->session()->get('download_pdf', false),
         ]);
