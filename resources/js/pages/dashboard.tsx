@@ -2,10 +2,11 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, Users } from 'lucide-react';
 import { useState } from 'react';
 import PendingInvitationsModal from '@/components/pending-invitations-modal';
+import RegistrationStats from '@/components/registration-stats';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { index as registrationsIndex } from '@/routes/registrations';
-import type { DashboardInvitation } from '@/types';
+import type { DashboardInvitation, RegistrationStats as Stats } from '@/types';
 
 type LatestRegistration = {
     id: number;
@@ -13,12 +14,14 @@ type LatestRegistration = {
     name: string;
     phone: string;
     church: string | null;
+    churchGroup: string | null;
+    role: string | null;
     createdAt: string | null;
 };
 
 type Props = {
     pendingInvitations?: DashboardInvitation[];
-    stats: { total: number; today: number; men: number; women: number } | null;
+    stats: Stats | null;
     latestRegistrations: LatestRegistration[];
 };
 
@@ -32,15 +35,6 @@ export default function Dashboard({
         pendingInvitations.length > 0,
     );
 
-    const statCards = stats
-        ? [
-              { label: 'Inscrits', value: stats.total },
-              { label: 'Aujourd’hui', value: stats.today },
-              { label: 'Hommes', value: stats.men },
-              { label: 'Femmes', value: stats.women },
-          ]
-        : [];
-
     return (
         <>
             <Head title="Dashboard" />
@@ -52,21 +46,14 @@ export default function Dashboard({
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 {stats ? (
                     <>
-                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                            {statCards.map((stat) => (
-                                <div
-                                    key={stat.label}
-                                    className="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-                                >
-                                    <p className="text-sm text-muted-foreground">
-                                        {stat.label}
-                                    </p>
-                                    <p className="mt-1 text-3xl font-semibold tabular-nums">
-                                        {stat.value}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
+                        <RegistrationStats
+                            stats={stats}
+                            groupHref={(group) =>
+                                registrationsIndex(currentTeam?.slug, {
+                                    query: group ? { group } : {},
+                                }).url
+                            }
+                        />
 
                         <div className="rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                             <div className="flex items-center justify-between gap-3 border-b p-4">
@@ -100,6 +87,9 @@ export default function Dashboard({
                                                     Téléphone
                                                 </th>
                                                 <th className="px-4 py-3 font-medium">
+                                                    Catégorie
+                                                </th>
+                                                <th className="px-4 py-3 font-medium">
                                                     Église
                                                 </th>
                                                 <th className="px-4 py-3 font-medium">
@@ -121,6 +111,9 @@ export default function Dashboard({
                                                     </td>
                                                     <td className="px-4 py-3 whitespace-nowrap">
                                                         {r.phone}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                        {r.churchGroup ?? '—'}
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         {r.church ?? '—'}

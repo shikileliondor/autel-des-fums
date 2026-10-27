@@ -17,9 +17,12 @@ class RegistrationController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->string('search')->trim()->value();
+        $group = $request->string('group')->value();
+        $group = array_key_exists($group, Registration::CHURCH_GROUPS) ? $group : '';
 
         $registrations = Registration::query()
             ->search($search)
+            ->when($group !== '', fn ($query) => $query->where('church_group', $group))
             ->latest()
             ->paginate(25)
             ->withQueryString()
@@ -30,14 +33,15 @@ class RegistrationController extends Controller
                 'gender' => $registration->gender,
                 'phone' => $registration->phone,
                 'email' => $registration->email,
-                'city' => $registration->city,
+                'role' => $registration->role,
                 'church' => $registration->church,
+                'churchGroup' => Registration::CHURCH_GROUPS[$registration->church_group] ?? null,
                 'createdAt' => $registration->created_at?->format('d/m/Y H:i'),
             ]);
 
         return Inertia::render('registrations/index', [
             'registrations' => $registrations,
-            'filters' => ['search' => $search],
+            'filters' => ['search' => $search, 'group' => $group],
             'stats' => Registration::stats(),
         ]);
     }
@@ -57,7 +61,7 @@ class RegistrationController extends Controller
             // UTF-8 BOM so Excel displays accents correctly.
             fwrite($handle, "\xEF\xBB\xBF");
 
-            fputcsv($handle, ['Référence', 'Prénom', 'Nom', 'Sexe', 'Téléphone', 'E-mail', 'Ville / commune', 'Église', 'Inscrit le'], ';');
+            fputcsv($handle, ['Référence', 'Prénom', 'Nom', 'Sexe', 'Téléphone', 'E-mail', 'Catégorie', 'Église', 'Fonction / rôle', 'Ville / commune', 'Inscrit le'], ';');
 
             Registration::query()->oldest()->lazy()->each(fn (Registration $registration) => fputcsv($handle, [
                 $registration->reference,
@@ -66,8 +70,10 @@ class RegistrationController extends Controller
                 $registration->gender,
                 $registration->phone,
                 $registration->email,
-                $registration->city,
+                Registration::CHURCH_GROUPS[$registration->church_group] ?? '',
                 $registration->church,
+                $registration->role,
+                $registration->city,
                 $registration->created_at?->format('d/m/Y H:i'),
             ], ';'));
 

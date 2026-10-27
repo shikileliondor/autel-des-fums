@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import CookieBanner from '@/components/event/cookie-banner';
 import EventNavbar from '@/components/event/event-navbar';
 import WhatsAppButton from '@/components/event/whatsapp-button';
 import { cn } from '@/lib/utils';
@@ -69,6 +70,8 @@ export default function EventShell({
                     </div>
                 </footer>
             </div>
+
+            <CookieBanner />
         </div>
     );
 }

@@ -14,12 +14,15 @@ function Field({
     name,
     error,
     optional,
+    mandatory,
     ...props
 }: InputHTMLAttributes<HTMLInputElement> & {
     label: string;
     name: string;
     error?: string;
     optional?: boolean;
+    /** Affiche « (obligatoire) » à côté du libellé. */
+    mandatory?: boolean;
 }) {
     return (
         <div className="grid gap-2">
@@ -31,6 +34,11 @@ function Field({
                 {optional && (
                     <span className="ml-1 font-normal text-event-muted">
                         (facultatif)
+                    </span>
+                )}
+                {mandatory && (
+                    <span className="ml-1 font-normal text-event-accent-ink">
+                        (obligatoire)
                     </span>
                 )}
             </label>
@@ -48,7 +56,7 @@ function Field({
 }
 
 export default function RegistrationCreate() {
-    const [isFoursquare, setIsFoursquare] = useState(false);
+    const [isMember, setIsMember] = useState(false);
 
     return (
         <EventShell>
@@ -129,7 +137,11 @@ export default function RegistrationCreate() {
                                 autoComplete="tel"
                                 defaultValue="+225 "
                                 placeholder="+225 07 00 00 00 00"
+                                // « +225 » seul ne suffit pas : au moins 8 chiffres.
+                                pattern={String.raw`\+?(\D*\d){8,15}\D*`}
+                                title="Indique ton numéro de téléphone (au moins 8 chiffres)."
                                 error={errors.phone}
+                                mandatory
                             />
                             <Field
                                 label="E-mail"
@@ -140,39 +152,40 @@ export default function RegistrationCreate() {
                                 error={errors.email}
                                 optional
                             />
-                            <Field
-                                label="Ville / commune"
-                                name="city"
-                                autoComplete="address-level2"
-                                placeholder="Cocody"
-                                error={errors.city}
-                            />
                             <div className="grid gap-3">
                                 <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-event-border bg-event-surface px-4 py-3.5 font-semibold text-event-muted transition has-checked:border-event-accent has-checked:bg-event-accent/15 has-checked:text-event-fg">
                                     <input
                                         type="checkbox"
-                                        name="is_foursquare"
+                                        name="is_member"
                                         value="1"
-                                        checked={isFoursquare}
+                                        checked={isMember}
                                         onChange={(e) =>
-                                            setIsFoursquare(e.target.checked)
+                                            setIsMember(e.target.checked)
                                         }
                                         className="size-5 shrink-0 accent-event-accent"
                                     />
-                                    Je suis de l’Église Foursquare Niangon
+                                    Je suis membre de Foursquare Niangon
                                     Révélation
                                 </label>
 
-                                {!isFoursquare && (
+                                {!isMember && (
                                     <Field
-                                        label="Église"
+                                        label="Précisez votre église"
                                         name="church"
-                                        placeholder="Nom de ton église"
+                                        placeholder="Ex. Foursquare Sideci, Église Baptiste…"
                                         error={errors.church}
                                         optional
                                     />
                                 )}
                             </div>
+
+                            <Field
+                                label="Fonction / rôle"
+                                name="role"
+                                placeholder="Ex. choriste, diacre, intercesseur…"
+                                error={errors.role}
+                                optional
+                            />
 
                             <button
                                 type="submit"

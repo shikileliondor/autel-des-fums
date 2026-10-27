@@ -23,8 +23,9 @@ class RegistrationFactory extends Factory
             'gender' => fake()->randomElement(Registration::GENDERS),
             'phone' => '+225'.fake()->unique()->numerify('07########'),
             'email' => fake()->optional()->safeEmail(),
-            'city' => fake()->randomElement(['Abidjan', 'Bouaké', 'Yamoussoukro', 'San-Pédro']),
             'church' => fake()->optional()->company(),
+            'church_group' => Registration::GROUP_GUEST,
+            'role' => fake()->optional()->randomElement(['Choriste', 'Diacre', 'Intercesseur', 'Fidèle']),
         ];
     }
 }

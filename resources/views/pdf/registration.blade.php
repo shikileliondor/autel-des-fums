@@ -35,7 +35,9 @@
         @if ($registration->email)
             <tr><td class="label">E-mail</td><td>{{ $registration->email }}</td></tr>
         @endif
-        <tr><td class="label">Ville / commune</td><td>{{ $registration->city }}</td></tr>
+        @if ($registration->role)
+        <tr><td class="label">Fonction / rôle</td><td>{{ $registration->role }}</td></tr>
+        @endif
         @if ($registration->church)
             <tr><td class="label">Église</td><td>{{ $registration->church }}</td></tr>
         @endif

@@ -14,8 +14,8 @@ function validRegistration(array $overrides = []): array
         'gender' => 'homme',
         'phone' => '+225 07 01 02 03 04',
         'email' => 'Ange@Example.com',
-        'city' => 'Cocody',
         'church' => null,
+        'role' => null,
         ...$overrides,
     ];
 }
@@ -126,7 +126,7 @@ test('a phone number can only be registered once', function () {
 
 test('required fields are validated', function () {
     $this->post(route('registration.store'), [])
-        ->assertSessionHasErrors(['first_name', 'last_name', 'gender', 'phone', 'city']);
+        ->assertSessionHasErrors(['first_name', 'last_name', 'gender', 'phone']);
 });
 
 test('the gender must be homme or femme', function () {
@@ -134,19 +134,46 @@ test('the gender must be homme or femme', function () {
         ->assertSessionHasErrors('gender');
 });
 
-test('ticking the Foursquare box fills in the host church', function () {
+test('a member of the host church only ticks the box', function () {
     $this->post(route('registration.store'), validRegistration([
-        'is_foursquare' => '1',
+        'is_member' => '1',
         'church' => 'Autre église',
     ]));
 
-    expect(Registration::sole()->church)->toBe(Registration::HOST_CHURCH);
+    expect(Registration::sole())
+        ->church_group->toBe(Registration::GROUP_HOST)
+        ->church->toBe(Registration::HOST_CHURCH);
 });
 
-test('a visitor from another church keeps the name they typed', function () {
-    $this->post(route('registration.store'), validRegistration(['church' => 'Église Baptiste']));
+test('another Foursquare assembly is recognised from the church name', function () {
+    $this->post(route('registration.store'), validRegistration(['church' => 'Foursquare Sideci']));
 
-    expect(Registration::sole()->church)->toBe('Église Baptiste');
+    expect(Registration::sole())
+        ->church_group->toBe(Registration::GROUP_FOURSQUARE)
+        ->church->toBe('Foursquare Sideci');
+});
+
+test('other visitors keep the church they typed, or none', function () {
+    $this->post(route('registration.store'), validRegistration(['church' => 'Église Baptiste']));
+    $this->post(route('registration.store'), validRegistration(['phone' => '+2250102030405']));
+
+    expect(Registration::pluck('church_group')->unique()->all())->toBe([Registration::GROUP_GUEST])
+        ->and(Registration::pluck('church')->all())->toContain('Église Baptiste', null);
+});
+
+test('the category cannot be forced by the visitor', function () {
+    $this->post(route('registration.store'), validRegistration([
+        'church_group' => Registration::GROUP_HOST,
+        'church' => 'Église Baptiste',
+    ]));
+
+    expect(Registration::sole()->church_group)->toBe(Registration::GROUP_GUEST);
+});
+
+test('the role is optional and saved when given', function () {
+    $this->post(route('registration.store'), validRegistration(['role' => '  Choriste ']));
+
+    expect(Registration::sole()->role)->toBe('Choriste');
 });
 
 test('the privacy page shows the contact details', function () {
@@ -195,4 +222,13 @@ test('the same phone is limited to a few attempts per minute', function () {
 
     $this->post(route('registration.store'), validRegistration())
         ->assertSessionHasErrors(['phone' => 'Trop de tentatives. Patiente une minute puis réessaie.']);
+});
+
+test('the phone is required, the +225 prefix alone does not count', function () {
+    foreach (['', '+225', '+225 '] as $phone) {
+        $this->post(route('registration.store'), validRegistration(['phone' => $phone]))
+            ->assertSessionHasErrors(['phone' => 'Le numéro de téléphone est obligatoire.']);
+    }
+
+    expect(Registration::count())->toBe(0);
 });

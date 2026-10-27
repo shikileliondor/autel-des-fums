@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Download, Search } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import RegistrationStats from '@/components/registration-stats';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import {
     exportMethod as exportRegistrations,
     index,
 } from '@/routes/registrations';
-import type { RegistrationRow } from '@/types';
+import type { RegistrationRow, RegistrationStats as Stats } from '@/types';
 
 type Props = {
     registrations: {
@@ -20,8 +21,8 @@ type Props = {
         to: number | null;
         total: number;
     };
-    filters: { search: string };
-    stats: { total: number; today: number; men: number; women: number };
+    filters: { search: string; group: string };
+    stats: Stats;
 };
 
 export default function RegistrationsIndex({
@@ -32,40 +33,35 @@ export default function RegistrationsIndex({
     const { currentTeam } = usePage().props;
     const [search, setSearch] = useState(filters.search);
 
+    const query = (params: { search?: string; group?: string }) =>
+        Object.fromEntries(
+            Object.entries({
+                search: filters.search,
+                group: filters.group,
+                ...params,
+            }).filter(([, value]) => value),
+        );
+
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        router.get(index(currentTeam?.slug).url, search ? { search } : {}, {
+        router.get(index(currentTeam?.slug).url, query({ search }), {
             preserveState: true,
             replace: true,
         });
     };
 
-    const statCards = [
-        { label: 'Inscrits', value: stats.total },
-        { label: 'Aujourd’hui', value: stats.today },
-        { label: 'Hommes', value: stats.men },
-        { label: 'Femmes', value: stats.women },
-    ];
+    const groupHref = (group: string) =>
+        index(currentTeam?.slug, { query: query({ group }) }).url;
 
     return (
         <>
             <Head title="Inscrits" />
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                    {statCards.map((stat) => (
-                        <div
-                            key={stat.label}
-                            className="rounded-xl border border-sidebar-border/70 p-4 dark:border-sidebar-border"
-                        >
-                            <p className="text-sm text-muted-foreground">
-                                {stat.label}
-                            </p>
-                            <p className="mt-1 text-3xl font-semibold tabular-nums">
-                                {stat.value}
-                            </p>
-                        </div>
-                    ))}
-                </div>
+                <RegistrationStats
+                    stats={stats}
+                    groupHref={groupHref}
+                    activeGroup={filters.group}
+                />
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <form
@@ -98,7 +94,12 @@ export default function RegistrationsIndex({
                                 <th className="px-4 py-3 font-medium">
                                     Téléphone
                                 </th>
-                                <th className="px-4 py-3 font-medium">Ville</th>
+                                <th className="px-4 py-3 font-medium">
+                                    Fonction
+                                </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Catégorie
+                                </th>
                                 <th className="px-4 py-3 font-medium">
                                     Église
                                 </th>
@@ -129,7 +130,12 @@ export default function RegistrationsIndex({
                                     <td className="px-4 py-3 whitespace-nowrap">
                                         {r.phone}
                                     </td>
-                                    <td className="px-4 py-3">{r.city}</td>
+                                    <td className="px-4 py-3">
+                                        {r.role ?? '—'}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap">
+                                        {r.churchGroup ?? '—'}
+                                    </td>
                                     <td className="px-4 py-3">
                                         {r.church ?? '—'}
                                     </td>
@@ -141,10 +147,12 @@ export default function RegistrationsIndex({
                             {registrations.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={7}
+                                        colSpan={8}
                                         className="px-4 py-12 text-center text-muted-foreground"
                                     >
-                                        Aucun inscrit pour le moment.
+                                        {filters.search || filters.group
+                                            ? 'Aucun inscrit ne correspond à ce filtre.'
+                                            : 'Aucun inscrit pour le moment.'}
                                     </td>
                                 </tr>
                             )}

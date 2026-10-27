@@ -44,6 +44,8 @@ class DashboardController extends Controller
                     'name' => $registration->first_name.' '.$registration->last_name,
                     'phone' => $registration->phone,
                     'church' => $registration->church,
+                    'churchGroup' => Registration::CHURCH_GROUPS[$registration->church_group] ?? null,
+                    'role' => $registration->role,
                     'createdAt' => $registration->created_at?->format('d/m/Y H:i'),
                 ])
                 : [],

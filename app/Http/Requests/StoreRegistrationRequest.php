@@ -9,15 +9,24 @@ use Illuminate\Validation\Rule;
 class StoreRegistrationRequest extends FormRequest
 {
     /**
-     * Normalize the phone number before validation, and fill in the host
-     * church when the visitor ticked "Je suis de l'Église Foursquare".
+     * Normalize the input before validation. Host church members only tick a box:
+     * their church is filled in, and the category is always derived here, never
+     * taken from the visitor.
      */
     protected function prepareForValidation(): void
     {
+        $isHostMember = $this->boolean('is_member');
+        $church = $isHostMember ? Registration::HOST_CHURCH : (trim((string) $this->input('church')) ?: null);
+
+        $phone = preg_replace('/[\s.\-()]/', '', (string) $this->input('phone'));
+
         $this->merge([
-            'phone' => preg_replace('/[\s.\-()]/', '', (string) $this->input('phone')),
+            // The form is prefilled with "+225": that alone means no phone was given.
+            'phone' => in_array($phone, ['+225', '225', '+'], true) ? '' : $phone,
             'email' => $this->filled('email') ? strtolower(trim((string) $this->input('email'))) : null,
-            'church' => $this->boolean('is_foursquare') ? Registration::HOST_CHURCH : $this->input('church'),
+            'church' => $church,
+            'church_group' => Registration::churchGroupFor($isHostMember, $church),
+            'role' => trim((string) $this->input('role')) ?: null,
         ]);
     }
 
@@ -34,8 +43,9 @@ class StoreRegistrationRequest extends FormRequest
             'gender' => ['required', Rule::in(Registration::GENDERS)],
             'phone' => ['required', 'regex:/^\+?[0-9]{8,15}$/', 'unique:registrations,phone'],
             'email' => ['nullable', 'email', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
             'church' => ['nullable', 'string', 'max:150'],
+            'church_group' => ['required', Rule::in(array_keys(Registration::CHURCH_GROUPS))],
+            'role' => ['nullable', 'string', 'max:100'],
         ];
     }
 
@@ -50,6 +60,7 @@ class StoreRegistrationRequest extends FormRequest
             'required' => 'Le champ :attribute est obligatoire.',
             'max' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
             'gender.in' => 'Veuillez choisir Homme ou Femme.',
+            'phone.required' => 'Le numéro de téléphone est obligatoire.',
             'phone.regex' => 'Le numéro de téléphone n’est pas valide.',
             'phone.unique' => 'Ce numéro de téléphone est déjà inscrit.',
             'email.email' => 'L’adresse e-mail n’est pas valide.',
@@ -69,8 +80,8 @@ class StoreRegistrationRequest extends FormRequest
             'gender' => 'sexe',
             'phone' => 'téléphone',
             'email' => 'e-mail',
-            'city' => 'ville / commune',
             'church' => 'église',
+            'role' => 'fonction / rôle',
         ];
     }
 }

@@ -19,7 +19,23 @@ export type RegistrationRow = {
     gender: 'homme' | 'femme';
     phone: string;
     email: string | null;
-    city: string;
+    role: string | null;
     church: string | null;
+    /** Libellé de la catégorie : Foursquare Révélation, Autre Foursquare ou Autres églises. */
+    churchGroup: string | null;
     createdAt: string | null;
+};
+
+export type ChurchGroupStat = {
+    key: 'revelation' | 'foursquare' | 'invite';
+    label: string;
+    count: number;
+};
+
+export type RegistrationStats = {
+    total: number;
+    today: number;
+    men: number;
+    women: number;
+    groups: ChurchGroupStat[];
 };

@@ -67,3 +67,36 @@ test('admins can export registrations as csv', function () {
         ->toContain($registration->reference)
         ->toContain($registration->phone);
 });
+
+test('admins see registrations split by church category and can filter on one', function () {
+    $admin = User::factory()->create(['email' => 'admin@example.com']);
+    Registration::factory()->count(3)->create(['church_group' => Registration::GROUP_HOST]);
+    Registration::factory()->count(2)->create(['church_group' => Registration::GROUP_FOURSQUARE]);
+    Registration::factory()->create(['church_group' => Registration::GROUP_GUEST]);
+
+    $this->actingAs($admin)
+        ->get(route('registrations.index', $admin->currentTeam))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('stats.groups.0', ['key' => 'revelation', 'label' => 'Foursquare Révélation', 'count' => 3])
+            ->where('stats.groups.1', ['key' => 'foursquare', 'label' => 'Autre Foursquare', 'count' => 2])
+            ->where('stats.groups.2', ['key' => 'invite', 'label' => 'Autres églises', 'count' => 1]));
+
+    $this->actingAs($admin)
+        ->get(route('registrations.index', [$admin->currentTeam, 'group' => 'foursquare']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('registrations.data', 2)
+            ->where('registrations.data.0.churchGroup', 'Autre Foursquare')
+            ->where('filters.group', 'foursquare')
+            ->where('stats.total', 6));
+});
+
+test('the export includes the church category', function () {
+    $admin = User::factory()->create(['email' => 'admin@example.com']);
+    Registration::factory()->create(['church_group' => Registration::GROUP_HOST]);
+
+    $csv = $this->actingAs($admin)
+        ->get(route('registrations.export', $admin->currentTeam))
+        ->streamedContent();
+
+    expect($csv)->toContain('Catégorie')->toContain('Foursquare Révélation');
+});

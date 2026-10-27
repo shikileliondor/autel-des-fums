@@ -20,11 +20,11 @@ return [
 
     'theme_reference' => env('EVENT_THEME_REFERENCE', 'Ésaïe 6:3'),
 
-    'starts_at' => env('EVENT_STARTS_AT'),
+    'starts_at' => env('EVENT_STARTS_AT', '2026-11-29'),
 
     'city' => env('EVENT_CITY', 'Abidjan'),
 
-    'venue' => env('EVENT_VENUE'),
+    'venue' => env('EVENT_VENUE', 'Yopougon Maroc, rue S2'),
 
     // Affichés sur la page Confidentialité pour l'exercice des droits.
     'contact_email' => env('EVENT_CONTACT_EMAIL', env('MAIL_FROM_ADDRESS')),

@@ -18,12 +18,14 @@ use Illuminate\Support\Str;
  * @property string $gender
  * @property string $phone
  * @property string|null $email
- * @property string $city
+ * @property string|null $city
  * @property string|null $church
+ * @property string $church_group
+ * @property string|null $role
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['first_name', 'last_name', 'gender', 'phone', 'email', 'city', 'church'])]
+#[Fillable(['first_name', 'last_name', 'gender', 'phone', 'email', 'city', 'church', 'church_group', 'role'])]
 class Registration extends Model
 {
     /** @use HasFactory<RegistrationFactory> */
@@ -32,6 +34,35 @@ class Registration extends Model
     public const GENDERS = ['homme', 'femme'];
 
     public const HOST_CHURCH = 'Église Foursquare Niangon Révélation';
+
+    /** Members of the host church. */
+    public const GROUP_HOST = 'revelation';
+
+    /** Members of another Foursquare assembly. */
+    public const GROUP_FOURSQUARE = 'foursquare';
+
+    /** Everyone else (other churches or none). */
+    public const GROUP_GUEST = 'invite';
+
+    /**
+     * Category of a registrant: host church members tick a box, the others type their
+     * church, and a name mentioning Foursquare counts as another Foursquare assembly.
+     */
+    public static function churchGroupFor(bool $isHostMember, ?string $church): string
+    {
+        return match (true) {
+            $isHostMember => self::GROUP_HOST,
+            str_contains(mb_strtolower((string) $church), 'foursquare') => self::GROUP_FOURSQUARE,
+            default => self::GROUP_GUEST,
+        };
+    }
+
+    /** @var array<string, string> Church groups and their labels, in display order. */
+    public const CHURCH_GROUPS = [
+        self::GROUP_HOST => 'Foursquare Révélation',
+        self::GROUP_FOURSQUARE => 'Autre Foursquare',
+        self::GROUP_GUEST => 'Autres églises',
+    ];
 
     /**
      * Bootstrap the model and its traits.
@@ -62,20 +93,30 @@ class Registration extends Model
     /**
      * Summary counts shown on the dashboard and the registrations list.
      *
-     * @return array{total: int, today: int, men: int, women: int}
+     * @return array{total: int, today: int, men: int, women: int, groups: list<array{key: string, label: string, count: int}>}
      */
     public static function stats(): array
     {
+        $byGroup = static::query()
+            ->selectRaw('church_group, COUNT(*) as aggregate')
+            ->groupBy('church_group')
+            ->pluck('aggregate', 'church_group');
+
         return [
             'total' => static::count(),
             'today' => static::whereDate('created_at', today())->count(),
             'men' => static::where('gender', 'homme')->count(),
             'women' => static::where('gender', 'femme')->count(),
+            'groups' => array_map(fn (string $key) => [
+                'key' => $key,
+                'label' => self::CHURCH_GROUPS[$key],
+                'count' => (int) ($byGroup[$key] ?? 0),
+            ], array_keys(self::CHURCH_GROUPS)),
         ];
     }
 
     /**
-     * Filter registrations by name, phone, email, city, church or reference.
+     * Filter registrations by name, phone, email, city, church, role or reference.
      *
      * @param  Builder<Registration>  $query
      */
@@ -94,6 +135,7 @@ class Registration extends Model
             ->orWhere('phone', 'like', $like)
             ->orWhere('email', 'like', $like)
             ->orWhere('city', 'like', $like)
+            ->orWhere('role', 'like', $like)
             ->orWhere('church', 'like', $like));
     }
 }

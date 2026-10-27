@@ -1,5 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
-import { Minus, Plus, ShoppingBag, Trash2, ZoomIn } from 'lucide-react';
+import {
+    CircleCheck,
+    Minus,
+    Plus,
+    ShoppingBag,
+    Trash2,
+    ZoomIn,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import EventShell from '@/components/event/event-shell';
 import {
@@ -225,6 +232,12 @@ export default function Boutique() {
     const { event } = usePage().props;
     const [cart, setCart] = useState<CartLine[]>([]);
     const [customer, setCustomer] = useState('');
+    // Dernière commande envoyée : le panier est vidé, on garde de quoi la renvoyer.
+    const [ordered, setOrdered] = useState<{
+        count: number;
+        total: number;
+        url: string;
+    } | null>(null);
 
     useEffect(() => setCart(loadCart()), []);
 
@@ -292,6 +305,26 @@ export default function Boutique() {
     ].join('\n');
 
     const canOrder = lines.length > 0 && customer.trim() !== '';
+    const orderUrl = event.contactPhone
+        ? `https://wa.me/${whatsappNumber(event.contactPhone)}?text=${encodeURIComponent(message)}`
+        : null;
+
+    // WhatsApp s'ouvre dans un nouvel onglet ; ici on confirme et on repart de zéro
+    // pour que la page ne garde pas l'ancienne commande.
+    const placeOrder = () => {
+        if (!canOrder || !orderUrl) {
+            return;
+        }
+
+        const summary = { count, total, url: orderUrl };
+
+        // Après le clic : le lien doit d'abord ouvrir WhatsApp avec le message complet.
+        window.setTimeout(() => {
+            setOrdered(summary);
+            setCustomer('');
+            update([]);
+        }, 0);
+    };
 
     return (
         <EventShell>
@@ -346,7 +379,40 @@ export default function Boutique() {
                             </span>
                         </div>
 
-                        {lines.length === 0 ? (
+                        {ordered && lines.length === 0 ? (
+                            <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-50 p-4 text-sm">
+                                <p className="flex items-center gap-2 font-bold text-emerald-700">
+                                    <CircleCheck className="size-5" />
+                                    Commande passée
+                                </p>
+                                <p className="mt-2 leading-relaxed text-event-fg">
+                                    {ordered.count} article
+                                    {ordered.count > 1 ? 's' : ''} ·{' '}
+                                    {formatPrice(ordered.total)}. Envoie le
+                                    message préparé dans WhatsApp : l’équipe te
+                                    recontacte pour le règlement et la
+                                    livraison.
+                                </p>
+                                <p className="mt-3 text-xs text-event-muted">
+                                    WhatsApp ne s’est pas ouvert ?{' '}
+                                    <a
+                                        href={ordered.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-semibold text-event-fg underline"
+                                    >
+                                        Renvoyer la commande
+                                    </a>
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setOrdered(null)}
+                                    className="mt-3 text-xs font-semibold text-event-accent-ink hover:text-event-fg"
+                                >
+                                    Faire une nouvelle commande
+                                </button>
+                            </div>
+                        ) : lines.length === 0 ? (
                             <p className="mt-4 text-sm leading-relaxed text-event-muted">
                                 Ton panier est vide. Ajoute des articles, le
                                 récapitulatif s’affiche ici.
@@ -417,15 +483,12 @@ export default function Boutique() {
                                     />
                                 </label>
 
-                                {event.contactPhone ? (
+                                {orderUrl ? (
                                     <a
-                                        href={
-                                            canOrder
-                                                ? `https://wa.me/${whatsappNumber(event.contactPhone)}?text=${encodeURIComponent(message)}`
-                                                : undefined
-                                        }
+                                        href={canOrder ? orderUrl : undefined}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        onClick={placeOrder}
                                         aria-disabled={!canOrder}
                                         className={`mt-3 flex h-12 items-center justify-center rounded-xl bg-[#25d366] text-sm font-bold text-white transition hover:brightness-105 ${canOrder ? '' : 'pointer-events-none opacity-40'}`}
                                     >
