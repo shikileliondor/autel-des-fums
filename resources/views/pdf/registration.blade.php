@@ -12,6 +12,8 @@
         .code { margin: 28px 0; padding: 18px; border: 2px dashed #f97316; text-align: center; }
         .code-label { font-size: 10px; letter-spacing: 3px; color: #78716c; text-transform: uppercase; }
         .code-value { font-family: DejaVu Sans Mono, monospace; font-size: 30px; font-weight: bold; letter-spacing: 4px; margin-top: 6px; }
+        .qr { width: 150px; height: 150px; margin-top: 14px; }
+        .qr-hint { font-size: 10px; color: #78716c; margin-top: 4px; }
         table { width: 100%; border-collapse: collapse; }
         td { padding: 8px 0; border-bottom: 1px solid #e7e5e4; }
         td.label { width: 35%; color: #78716c; }
@@ -31,6 +33,8 @@
     <div class="code">
         <div class="code-label">Code d’inscription</div>
         <div class="code-value">{{ $registration->reference }}</div>
+        <img src="{{ $qrCode }}" alt="QR code {{ $registration->reference }}" class="qr">
+        <div class="qr-hint">À présenter à l’accueil le jour du programme</div>
     </div>
 
     <table>

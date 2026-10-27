@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CheckInController;
 use App\Http\Controllers\Admin\RegistrationController as AdminRegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeployHookController;
@@ -33,6 +34,8 @@ Route::prefix('{current_team}')
         Route::middleware('can:manage-registrations')->group(function () {
             Route::get('inscrits', [AdminRegistrationController::class, 'index'])->name('registrations.index');
             Route::get('inscrits/export', [AdminRegistrationController::class, 'export'])->name('registrations.export');
+            Route::get('accueil', [CheckInController::class, 'show'])->name('check-in.show');
+            Route::post('accueil', [CheckInController::class, 'store'])->name('check-in.store');
         });
     });
 

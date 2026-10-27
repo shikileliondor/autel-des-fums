@@ -37,6 +37,7 @@ class RegistrationController extends Controller
                 'church' => $registration->church,
                 'churchGroup' => Registration::CHURCH_GROUPS[$registration->church_group] ?? null,
                 'createdAt' => $registration->created_at?->format('d/m/Y H:i'),
+                'checkedInAt' => $registration->checked_in_at?->format('d/m H:i'),
             ]);
 
         return Inertia::render('registrations/index', [
@@ -61,7 +62,7 @@ class RegistrationController extends Controller
             // UTF-8 BOM so Excel displays accents correctly.
             fwrite($handle, "\xEF\xBB\xBF");
 
-            fputcsv($handle, ['Référence', 'Prénom', 'Nom', 'Sexe', 'Téléphone', 'E-mail', 'Catégorie', 'Église', 'Fonction / rôle', 'Ville / commune', 'Inscrit le'], ';');
+            fputcsv($handle, ['Référence', 'Prénom', 'Nom', 'Sexe', 'Téléphone', 'E-mail', 'Catégorie', 'Église', 'Fonction / rôle', 'Ville / commune', 'Inscrit le', 'Présent à'], ';');
 
             Registration::query()->oldest()->lazy()->each(fn (Registration $registration) => fputcsv($handle, [
                 $registration->reference,
@@ -75,6 +76,7 @@ class RegistrationController extends Controller
                 self::csvSafe($registration->role),
                 self::csvSafe($registration->city),
                 $registration->created_at?->format('d/m/Y H:i'),
+                $registration->checked_in_at?->format('d/m/Y H:i'),
             ], ';'));
 
             fclose($handle);

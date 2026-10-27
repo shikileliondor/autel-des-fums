@@ -211,7 +211,7 @@ test('the boutique page can be displayed', function () {
 test('the pdf is generated once then served from disk', function () {
     Storage::fake('local');
     $this->post(route('registration.store'), validRegistration());
-    $path = 'pdf/inscription-'.Registration::sole()->reference.'.pdf';
+    $path = 'pdf/v2/inscription-'.Registration::sole()->reference.'.pdf';
 
     $this->get(route('registration.pdf'))->assertOk();
     Storage::disk('local')->assertExists($path);

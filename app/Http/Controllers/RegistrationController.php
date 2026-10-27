@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRegistrationRequest;
 use App\Mail\RegistrationConfirmed;
 use App\Models\Registration;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -94,7 +98,8 @@ class RegistrationController extends Controller
 
         // Generated once per registration, then served from disk: dompdf is the heaviest
         // part of the site and the PDF is requested automatically after each registration.
-        $path = "pdf/inscription-{$registration->reference}.pdf";
+        // The "v2" folder holds the version with the QR code: older PDFs get regenerated.
+        $path = "pdf/v2/inscription-{$registration->reference}.pdf";
         $disk = Storage::disk('local');
 
         if (! $disk->exists($path)) {
@@ -115,6 +120,7 @@ class RegistrationController extends Controller
 
         return Pdf::loadView('pdf.registration', [
             'registration' => $registration,
+            'qrCode' => $this->qrCode($registration->reference),
             'eventName' => config('event.name'),
             'startsAt' => $startsAt
                 ? Str::ucfirst(Carbon::parse($startsAt)->settings(['locale' => 'fr'])->translatedFormat(
@@ -123,5 +129,17 @@ class RegistrationController extends Controller
                 : null,
             'place' => collect([config('event.venue'), config('event.city')])->filter()->implode(', '),
         ])->output();
+    }
+
+    /**
+     * QR code of the registration code, scanned at the entrance. SVG, so dompdf
+     * renders it without the GD extension.
+     */
+    private function qrCode(string $content): string
+    {
+        $svg = (new Writer(new ImageRenderer(new RendererStyle(320, 1), new SvgImageBackEnd)))
+            ->writeString($content);
+
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 }

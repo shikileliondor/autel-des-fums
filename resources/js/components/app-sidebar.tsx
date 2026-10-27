@@ -1,5 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Users } from 'lucide-react';
+import {
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    ScanLine,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,6 +21,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import checkIn from '@/routes/check-in';
 import registrations from '@/routes/registrations';
 import type { NavItem } from '@/types';
 
@@ -36,6 +43,11 @@ export function AppSidebar() {
                       title: 'Inscrits',
                       href: registrations.index(page.props.currentTeam.slug),
                       icon: Users,
+                  },
+                  {
+                      title: 'Accueil (scan)',
+                      href: checkIn.show(page.props.currentTeam.slug),
+                      icon: ScanLine,
                   },
               ]
             : []),

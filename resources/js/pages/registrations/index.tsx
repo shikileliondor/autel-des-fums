@@ -106,6 +106,9 @@ export default function RegistrationsIndex({
                                 <th className="px-4 py-3 font-medium">
                                     Inscrit le
                                 </th>
+                                <th className="px-4 py-3 font-medium">
+                                    Présent
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -142,12 +145,23 @@ export default function RegistrationsIndex({
                                     <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                         {r.createdAt}
                                     </td>
+                                    <td className="px-4 py-3 whitespace-nowrap">
+                                        {r.checkedInAt ? (
+                                            <Badge className="bg-emerald-600 text-white">
+                                                {r.checkedInAt}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground">
+                                                —
+                                            </span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                             {registrations.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={9}
                                         className="px-4 py-12 text-center text-muted-foreground"
                                     >
                                         {filters.search || filters.group

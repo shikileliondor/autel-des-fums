@@ -27,6 +27,8 @@ export type RegistrationRow = {
     /** Libellé de la catégorie : Foursquare Révélation, Autre Foursquare ou Autres églises. */
     churchGroup: string | null;
     createdAt: string | null;
+    /** Heure du scan à l'entrée, null tant que la personne n'est pas arrivée. */
+    checkedInAt: string | null;
 };
 
 export type ChurchGroupStat = {

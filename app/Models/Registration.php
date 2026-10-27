@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
  * @property string|null $church
  * @property string $church_group
  * @property string|null $role
+ * @property Carbon|null $checked_in_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -66,6 +67,16 @@ class Registration extends Model
         self::GROUP_FOURSQUARE => 'Autre Foursquare',
         self::GROUP_GUEST => 'Autres églises',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'checked_in_at' => 'datetime',
+        ];
+    }
 
     /**
      * Bootstrap the model and its traits.
