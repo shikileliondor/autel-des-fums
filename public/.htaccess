@@ -42,4 +42,14 @@
     <FilesMatch "\.(jpe?g|png|webp|svg|ico)$">
         Header set Cache-Control "public, max-age=604800"
     </FilesMatch>
+
+    # Security headers. "always" also covers redirects and error pages.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    # The site is served over HTTPS only: browsers must never fall back to HTTP
+    # (browsers ignore this header on plain HTTP responses).
+    Header always set Strict-Transport-Security "max-age=31536000"
+    Header always unset X-Powered-By
 </IfModule>

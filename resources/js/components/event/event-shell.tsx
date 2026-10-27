@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import CookieBanner from '@/components/event/cookie-banner';
 import EventNavbar from '@/components/event/event-navbar';
 import WhatsAppButton from '@/components/event/whatsapp-button';
+import { useReveal } from '@/hooks/use-reveal';
 import { cn } from '@/lib/utils';
 import { boutique, home, privacy } from '@/routes';
 
@@ -42,9 +43,13 @@ export default function EventShell({
     className?: string;
 }) {
     const { event } = usePage().props;
+    const revealRoot = useReveal<HTMLDivElement>();
 
     return (
-        <div className="event-site relative min-h-screen overflow-x-clip bg-event-bg font-sans text-event-fg antialiased scheme-light">
+        <div
+            ref={revealRoot}
+            className="event-site relative min-h-screen overflow-x-clip bg-event-bg font-sans text-event-fg antialiased scheme-light"
+        >
             <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 sm:px-10">
                 <EventNavbar />
 

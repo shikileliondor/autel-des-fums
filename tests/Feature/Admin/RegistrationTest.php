@@ -113,3 +113,21 @@ test('admins see registrations split by role', function () {
             ->where('stats.roles.0', ['label' => 'Chantre', 'count' => 2])
             ->where('stats.roles.4', ['label' => 'Autre', 'count' => 1]));
 });
+
+test('the export neutralises spreadsheet formulas typed by visitors', function () {
+    $admin = User::factory()->create(['email' => 'admin@example.com']);
+    Registration::factory()->create([
+        'church' => '=HYPERLINK("https://piege.example";"Clique")',
+        'role' => '@SUM(1+1)',
+        'phone' => '+2250701020304',
+    ]);
+
+    $csv = $this->actingAs($admin)
+        ->get(route('registrations.export', $admin->currentTeam))
+        ->streamedContent();
+
+    expect($csv)
+        ->toContain("'=HYPERLINK")
+        ->toContain("'@SUM")
+        ->toContain(';+2250701020304;');
+});

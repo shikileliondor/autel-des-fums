@@ -8,6 +8,9 @@ use Illuminate\Validation\Rule;
 
 class StoreRegistrationRequest extends FormRequest
 {
+    /** Letters (any language, with accents), spaces, apostrophes, hyphens and dots. */
+    private const NAME_PATTERN = "regex:/^[\\pL\\pM][\\pL\\pM\\s'’.-]*$/u";
+
     /**
      * Normalize the input before validation. Host church members only tick a box:
      * their church is filled in, and the category is always derived here, never
@@ -40,8 +43,10 @@ class StoreRegistrationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            // Letters only: the first name is shown in the confirmation email (Markdown),
+            // so symbols like [ ] ( ) * # could otherwise inject links or formatting.
+            'first_name' => ['required', 'string', 'max:100', self::NAME_PATTERN],
+            'last_name' => ['required', 'string', 'max:100', self::NAME_PATTERN],
             'gender' => ['required', Rule::in(Registration::GENDERS)],
             'phone' => ['required', 'regex:/^\+?[0-9]{8,15}$/', 'unique:registrations,phone'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -63,6 +68,8 @@ class StoreRegistrationRequest extends FormRequest
         return [
             'required' => 'Le champ :attribute est obligatoire.',
             'max' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
+            'first_name.regex' => 'Le prénom ne doit contenir que des lettres.',
+            'last_name.regex' => 'Le nom ne doit contenir que des lettres.',
             'gender.in' => 'Veuillez choisir Homme ou Femme.',
             'phone.required' => 'Le numéro de téléphone est obligatoire.',
             'phone.regex' => 'Le numéro de téléphone n’est pas valide.',

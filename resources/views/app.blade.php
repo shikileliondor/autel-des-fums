@@ -134,6 +134,9 @@
                         // Reste visible au moins 600 ms pour ne pas clignoter.
                         setTimeout(function () {
                             splash.classList.add('is-hidden');
+                            // Les animations d'entrée de la page démarrent à ce moment-là.
+                            window.__splashDone = true;
+                            window.dispatchEvent(new Event('splash-hidden'));
                             setTimeout(function () { splash.remove(); }, 500);
                         }, Math.max(0, 600 - (Date.now() - shownAt)));
                     }

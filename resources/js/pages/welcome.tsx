@@ -6,6 +6,7 @@ import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
 import PhotoMosaic from '@/components/event/photo-mosaic';
 import WelcomeModal from '@/components/event/welcome-modal';
 import { formatPrice, products } from '@/lib/boutique';
+import { revealDelay } from '@/hooks/use-reveal';
 import { boutique } from '@/routes';
 import { create } from '@/routes/registration';
 
@@ -76,7 +77,7 @@ export default function Welcome() {
             <WelcomeModal />
 
             <section className="grid gap-6 text-center lg:grid-cols-[1fr_auto] lg:items-end lg:gap-12 lg:text-left">
-                <div>
+                <div data-reveal>
                     <p className="mb-4 text-xs font-bold tracking-[0.3em] text-event-accent-ink uppercase sm:text-sm">
                         — {event.tagline}
                     </p>
@@ -87,7 +88,11 @@ export default function Welcome() {
                         </span>
                     </h1>
                 </div>
-                <p className="mx-auto max-w-md text-base leading-relaxed text-event-muted sm:text-lg lg:mx-0 lg:max-w-sm lg:text-right">
+                <p
+                    data-reveal
+                    style={revealDelay(150)}
+                    className="mx-auto max-w-md text-base leading-relaxed text-event-muted sm:text-lg lg:mx-0 lg:max-w-sm lg:text-right"
+                >
                     <span>{displayDate}</span>
                     {time && <> à {time}</>} —{' '}
                     {[event.venue, event.city].filter(Boolean).join(', ')}.{' '}
@@ -97,10 +102,15 @@ export default function Welcome() {
 
             <div className="my-8 border-t border-event-border sm:my-10" />
 
-            <PhotoMosaic photos={photos} />
+            <div data-reveal style={revealDelay(250)}>
+                <PhotoMosaic photos={photos} />
+            </div>
 
             <section className="mt-12 flex flex-col items-center text-center">
-                <p className="max-w-xl text-base leading-relaxed text-event-muted sm:text-lg">
+                <p
+                    data-reveal
+                    className="max-w-xl text-base leading-relaxed text-event-muted sm:text-lg"
+                >
                     « Que ma prière soit devant ta face comme l’encens, et
                     l’élévation de mes mains comme l’offrande du soir ! »
                     <span className="mt-1 block text-sm font-semibold text-event-fg/70">
@@ -110,6 +120,8 @@ export default function Welcome() {
 
                 <Link
                     href={create()}
+                    data-reveal
+                    style={revealDelay(100)}
                     className="group mt-8 inline-flex items-center gap-2 rounded-full bg-event-accent px-8 py-4 text-base font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110"
                 >
                     Je m’inscris
@@ -117,14 +129,21 @@ export default function Welcome() {
                 </Link>
 
                 {event.startsAt && (
-                    <div className="mt-12 w-full max-w-lg">
+                    <div
+                        data-reveal
+                        style={revealDelay(200)}
+                        className="mt-12 w-full max-w-lg"
+                    >
                         <Countdown startsAt={event.startsAt} />
                     </div>
                 )}
             </section>
 
             <section className="mt-16 grid gap-4 sm:grid-cols-2">
-                <div className="flex items-start gap-4 rounded-3xl border border-event-border bg-event-surface/60 p-5 lg:p-6">
+                <div
+                    data-reveal
+                    className="lift flex items-start gap-4 rounded-3xl border border-event-border bg-event-surface/60 p-5 lg:p-6"
+                >
                     <CalendarDays className="mt-0.5 size-6 shrink-0 text-event-accent-ink" />
                     <div>
                         <p className="text-xs font-bold tracking-[0.18em] text-event-muted uppercase">
@@ -140,7 +159,11 @@ export default function Welcome() {
                         )}
                     </div>
                 </div>
-                <div className="flex items-start gap-4 rounded-3xl border border-event-border bg-event-surface/60 p-5 lg:p-6">
+                <div
+                    data-reveal
+                    style={revealDelay(120)}
+                    className="lift flex items-start gap-4 rounded-3xl border border-event-border bg-event-surface/60 p-5 lg:p-6"
+                >
                     <MapPin className="mt-0.5 size-6 shrink-0 text-event-accent-ink" />
                     <div>
                         <p className="text-xs font-bold tracking-[0.18em] text-event-muted uppercase">
@@ -166,7 +189,10 @@ export default function Welcome() {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-3xl border border-event-border sm:col-span-2">
+                <div
+                    data-reveal
+                    className="overflow-hidden rounded-3xl border border-event-border sm:col-span-2"
+                >
                     <iframe
                         src={MAP_EMBED_URL}
                         title="Plan d’accès : Église Foursquare Niangon Révélation"
@@ -179,7 +205,10 @@ export default function Welcome() {
             </section>
 
             <section className="mt-16">
-                <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+                <div
+                    data-reveal
+                    className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left"
+                >
                     <div>
                         <p className="text-xs font-bold tracking-[0.25em] text-event-accent-ink uppercase">
                             Boutique
@@ -203,11 +232,13 @@ export default function Welcome() {
                 </div>
 
                 <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-                    {products.slice(0, 4).map((product) => (
+                    {products.slice(0, 4).map((product, index) => (
                         <Link
                             key={product.id}
                             href={boutique()}
-                            className="group overflow-hidden rounded-2xl border border-event-border bg-event-surface"
+                            data-reveal
+                            style={revealDelay(index * 90)}
+                            className="group lift overflow-hidden rounded-2xl border border-event-border bg-event-surface"
                         >
                             <img
                                 src={product.image}
@@ -236,7 +267,10 @@ export default function Welcome() {
                 </Link>
             </section>
 
-            <section className="mt-16 rounded-3xl border border-event-border bg-white px-5 py-8 text-center sm:p-12">
+            <section
+                data-reveal
+                className="mt-16 rounded-3xl border border-event-border bg-white px-5 py-8 text-center sm:p-12"
+            >
                 <h2 className="text-3xl font-extrabold tracking-tight text-event-fg sm:text-4xl">
                     Inscris-toi.
                 </h2>

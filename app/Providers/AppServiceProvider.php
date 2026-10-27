@@ -50,10 +50,17 @@ class AppServiceProvider extends ServiceProvider
                 'phone' => 'Trop de tentatives. Patiente une minute puis réessaie.',
             ]);
 
-            return [
+            $email = strtolower(trim((string) $request->input('email')));
+
+            return array_filter([
                 Limit::perMinute(300)->by('ip:'.$request->ip())->response($tooMany),
                 Limit::perMinute(5)->by('phone:'.preg_replace('/\D/', '', (string) $request->input('phone')))->response($tooMany),
-            ];
+                // Each registration emails this address: stops the form being used to flood a mailbox.
+                // Generous enough for a family sharing one address.
+                $email !== '' ? Limit::perHour(10)->by('email:'.$email)->response(fn () => back()->withInput()->withErrors([
+                    'email' => 'Trop d’inscriptions avec cette adresse e-mail. Réessaie plus tard.',
+                ])) : null,
+            ]);
         });
     }
 

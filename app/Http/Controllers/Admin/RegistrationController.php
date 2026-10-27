@@ -65,15 +65,15 @@ class RegistrationController extends Controller
 
             Registration::query()->oldest()->lazy()->each(fn (Registration $registration) => fputcsv($handle, [
                 $registration->reference,
-                $registration->first_name,
-                $registration->last_name,
+                self::csvSafe($registration->first_name),
+                self::csvSafe($registration->last_name),
                 $registration->gender,
                 $registration->phone,
-                $registration->email,
+                self::csvSafe($registration->email),
                 Registration::CHURCH_GROUPS[$registration->church_group] ?? '',
-                $registration->church,
-                $registration->role,
-                $registration->city,
+                self::csvSafe($registration->church),
+                self::csvSafe($registration->role),
+                self::csvSafe($registration->city),
                 $registration->created_at?->format('d/m/Y H:i'),
             ], ';'));
 
@@ -81,5 +81,19 @@ class RegistrationController extends Controller
         }, 'inscrits-autel-des-parfums-'.now()->format('Y-m-d').'.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Neutralise spreadsheet formulas in visitor-typed text (CSV injection):
+     * a cell starting with = + - @ or a control character is prefixed with a quote,
+     * so Excel shows it as text instead of running it.
+     */
+    private static function csvSafe(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        return in_array($value[0], ['=', '+', '-', '@', "\t", "\r", "\n"], true) ? "'".$value : $value;
     }
 }

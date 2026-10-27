@@ -224,6 +224,7 @@ test('many people on the same network can register in the same minute', function
     foreach (range(1, 15) as $i) {
         $this->post(route('registration.store'), validRegistration([
             'phone' => '+22507000000'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            'email' => "personne{$i}@example.com",
         ]))->assertRedirect(route('registration.confirmed'));
     }
 
@@ -246,4 +247,39 @@ test('the phone is required, the +225 prefix alone does not count', function () 
     }
 
     expect(Registration::count())->toBe(0);
+});
+
+test('names cannot carry markdown or html into the confirmation email', function (string $name) {
+    $this->post(route('registration.store'), validRegistration(['first_name' => $name]))
+        ->assertSessionHasErrors(['first_name' => 'Le prénom ne doit contenir que des lettres.']);
+
+    expect(Registration::count())->toBe(0);
+})->with([
+    'markdown link' => '[Gagne un prix](https://piege.example)',
+    'html' => '<script>alert(1)</script>',
+    'formula' => '=HYPERLINK("https://piege.example")',
+    'heading' => '# Urgent',
+]);
+
+test('real names with accents, hyphens and apostrophes are accepted', function () {
+    $this->post(route('registration.store'), validRegistration([
+        'first_name' => 'Marie-Ève',
+        'last_name' => 'N’Guessan Koffi',
+    ]))->assertRedirect(route('registration.confirmed'));
+});
+
+test('one email address cannot be used to flood a mailbox', function () {
+    foreach (range(1, 10) as $i) {
+        $this->post(route('registration.store'), validRegistration([
+            'phone' => '+22507000001'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            'email' => 'victime@example.com',
+        ]));
+    }
+
+    $this->post(route('registration.store'), validRegistration([
+        'phone' => '+2250700000199',
+        'email' => 'victime@example.com',
+    ]))->assertSessionHasErrors('email');
+
+    expect(Registration::where('email', 'victime@example.com')->count())->toBe(10);
 });
