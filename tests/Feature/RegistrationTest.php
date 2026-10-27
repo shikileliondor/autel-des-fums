@@ -221,7 +221,7 @@ test('the boutique page can be displayed', function () {
 test('the pdf is generated once then served from disk', function () {
     Storage::fake('local');
     $this->post(route('registration.store'), validRegistration());
-    $path = 'pdf/v2/inscription-'.Registration::sole()->reference.'.pdf';
+    $path = 'pdf/v3/inscription-'.Registration::sole()->reference.'.pdf';
 
     $this->get(route('registration.pdf'))->assertOk();
     Storage::disk('local')->assertExists($path);
@@ -316,4 +316,27 @@ test('the same number written differently is still a duplicate', function () {
         ->assertSessionHasErrors(['phone' => 'Ce numéro de téléphone est déjà inscrit.']);
 
     expect(Registration::count())->toBe(1);
+});
+
+test('the qr code page shows the registrant without private details', function () {
+    $registration = Registration::factory()->create([
+        'first_name' => 'Ange',
+        'last_name' => 'Kouassi',
+        'phone' => '+2250701020304',
+        'email' => 'ange@example.com',
+    ]);
+
+    $this->get(route('registration.show', $registration))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('registration/show')
+            ->where('registration.reference', $registration->reference)
+            ->where('registration.name', 'Ange Kouassi')
+            ->where('registration.checkedIn', false)
+            ->missing('registration.phone')
+            ->missing('registration.email'));
+});
+
+test('the qr code page is a 404 for an unknown code', function () {
+    $this->get('/inscrit/ADP-ZZZZZZ')->assertNotFound();
 });

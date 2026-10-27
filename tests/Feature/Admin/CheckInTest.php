@@ -75,3 +75,11 @@ test('an unknown code is reported without error', function (?string $reference) 
         ->assertOk()
         ->assertExactJson(['status' => 'unknown']);
 })->with(['ADP-ZZZZZZ', 'https://example.com', null]);
+
+test('the registrant page url from the pdf qr code is recognised', function () {
+    $registration = Registration::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->postJson(route('check-in.store', $this->admin->currentTeam), ['reference' => route('registration.show', $registration)])
+        ->assertJson(['status' => 'ok']);
+});

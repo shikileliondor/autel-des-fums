@@ -101,8 +101,8 @@ class RegistrationController extends Controller
 
         // Generated once per registration, then served from disk: dompdf is the heaviest
         // part of the site and the PDF is requested automatically after each registration.
-        // The "v2" folder holds the version with the QR code: older PDFs get regenerated.
-        $path = "pdf/v2/inscription-{$registration->reference}.pdf";
+        // Bumped whenever the PDF changes (v3: the QR code opens the registrant page), so older PDFs get regenerated.
+        $path = "pdf/v3/inscription-{$registration->reference}.pdf";
         $disk = Storage::disk('local');
 
         if (! $disk->exists($path)) {
@@ -115,6 +115,22 @@ class RegistrationController extends Controller
     }
 
     /**
+     * Public page opened by the QR code: no phone or email, anyone can scan it.
+     */
+    public function show(Registration $registration): Response
+    {
+        return Inertia::render('registration/show', [
+            'registration' => [
+                'reference' => $registration->reference,
+                'name' => $registration->first_name.' '.$registration->last_name,
+                'role' => $registration->role,
+                'churchGroup' => Registration::CHURCH_GROUPS[$registration->church_group] ?? null,
+                'checkedIn' => $registration->checked_in_at !== null,
+            ],
+        ]);
+    }
+
+    /**
      * Render the registration confirmation PDF.
      */
     private function renderPdf(Registration $registration): string
@@ -123,7 +139,7 @@ class RegistrationController extends Controller
 
         return Pdf::loadView('pdf.registration', [
             'registration' => $registration,
-            'qrCode' => $this->qrCode($registration->reference),
+            'qrCode' => $this->qrCode(route('registration.show', $registration)),
             'eventName' => config('event.name'),
             'startsAt' => $startsAt
                 ? Str::ucfirst(Carbon::parse($startsAt)->settings(['locale' => 'fr'])->translatedFormat(

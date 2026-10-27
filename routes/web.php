@@ -20,6 +20,10 @@ Route::post('inscription', [RegistrationController::class, 'store'])
     ->name('registration.store');
 Route::get('inscription/confirmee', [RegistrationController::class, 'confirmed'])->name('registration.confirmed');
 Route::get('inscription/confirmee/pdf', [RegistrationController::class, 'pdf'])->name('registration.pdf');
+// Opened by the QR code of the PDF. Throttled so codes can't be tried in bulk.
+Route::get('inscrit/{registration:reference}', [RegistrationController::class, 'show'])
+    ->middleware('throttle:60,1')
+    ->name('registration.show');
 
 Route::post('deploy-hook', DeployHookController::class)
     ->withoutMiddleware(ValidateCsrfToken::class)
