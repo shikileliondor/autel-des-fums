@@ -14,6 +14,8 @@ const ROLES = [
     'Service d’ordre',
     'Intercession',
     'Communication',
+    'Comité d’organisation',
+    'Pasteur',
 ];
 
 const inputClass =

@@ -59,7 +59,7 @@ class Registration extends Model
     }
 
     /** Roles offered on the form; anything else typed under "Autre" is kept as is. */
-    public const ROLES = ['Chantre', 'Commando', 'Service d’ordre', 'Intercession', 'Communication'];
+    public const ROLES = ['Chantre', 'Commando', 'Service d’ordre', 'Intercession', 'Communication', 'Comité d’organisation', 'Pasteur'];
 
     /** @var array<string, string> Church groups and their labels, in display order. */
     public const CHURCH_GROUPS = [
