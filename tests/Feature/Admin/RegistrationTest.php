@@ -8,8 +8,8 @@ beforeEach(function () {
     config(['event.admin_emails' => ['admin@example.com']]);
 });
 
-test('guests are redirected to the login page', function () {
-    $this->get('/team/inscrits')->assertRedirect(route('login'));
+test('guests get a 404 and are not sent to the sign-in page', function () {
+    $this->get('/team/inscrits')->assertNotFound();
 });
 
 test('users who are not admins cannot see registrations', function () {

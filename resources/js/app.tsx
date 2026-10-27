@@ -15,6 +15,7 @@ void createInertiaApp({
             case name === 'welcome':
             case name === 'privacy':
             case name === 'boutique':
+            case name === 'not-found':
             case name.startsWith('registration/'):
                 return null;
             case name.startsWith('auth/'):

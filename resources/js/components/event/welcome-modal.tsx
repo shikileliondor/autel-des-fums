@@ -63,8 +63,11 @@ export default function WelcomeModal() {
                             {event.hostChurch}
                         </p>
 
-                        <DialogPrimitive.Title className="mt-2 text-2xl leading-none font-extrabold tracking-tight text-event-fg uppercase sm:text-4xl">
-                            {event.name}
+                        <DialogPrimitive.Title className="mt-2 font-charm text-4xl leading-[1.1] font-bold text-event-fg sm:text-5xl">
+                            L’Autel{' '}
+                            <span className="text-event-accent">
+                                des Parfums
+                            </span>
                         </DialogPrimitive.Title>
                         <p className="mt-1.5 text-base text-event-accent-ink sm:text-xl">
                             {event.tagline}
@@ -78,11 +81,6 @@ export default function WelcomeModal() {
                                 <p className="text-lg leading-tight font-extrabold text-event-accent uppercase sm:text-2xl">
                                     {event.theme}
                                 </p>
-                                {event.themeReference && (
-                                    <p className="mt-1 text-xs font-semibold text-white italic sm:text-sm">
-                                        {event.themeReference}
-                                    </p>
-                                )}
                             </div>
                         </div>
 

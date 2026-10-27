@@ -302,6 +302,9 @@ export default function Boutique() {
         ),
         '',
         `Total : ${formatPrice(total)}`,
+        '',
+        // Le lien fait apparaître l'aperçu du site (avec le logo) dans WhatsApp.
+        `${window.location.origin}/boutique`,
     ].join('\n');
 
     const canOrder = lines.length > 0 && customer.trim() !== '';

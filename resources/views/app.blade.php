@@ -1,6 +1,6 @@
 @php
     // Site public de l'événement (pas l'espace organisateurs) : écran de chargement.
-    $isPublicPage = in_array($page['component'], ['welcome', 'privacy', 'boutique'], true)
+    $isPublicPage = in_array($page['component'], ['welcome', 'privacy', 'boutique', 'not-found'], true)
         || str_starts_with($page['component'], 'registration/');
 @endphp
 <!DOCTYPE html>
@@ -46,6 +46,19 @@
         @if ($isPublicPage)
             <link rel="preload" as="image" href="/image/logo-autel-des-parfums-dark.png">
         @endif
+
+        {{-- Aperçu (logo) affiché par WhatsApp, Facebook… quand un lien du site est partagé --}}
+        <meta name="description" content="{{ config('event.name') }} · {{ config('event.tagline') }}. Inscriptions et boutique officielle.">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ config('event.name') }}">
+        <meta property="og:title" content="{{ config('event.name') }} · {{ config('event.tagline') }}">
+        <meta property="og:description" content="{{ config('event.theme') }}. Inscriptions et boutique officielle.">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ asset('image/og-image.jpg') }}">
+        <meta property="og:image:type" content="image/jpeg">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta name="twitter:card" content="summary_large_image">
 
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])

@@ -90,6 +90,11 @@ return [
 
     'domain' => null,
 
+    // Admin sign-in lives at a discreet address instead of /login (which now returns 404).
+    'paths' => [
+        'login' => 'morel',
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Fortify Routes Middleware
@@ -161,7 +166,8 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // No public sign-up: organisers join through a team invitation.
+        // Features::registration(),
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

@@ -18,7 +18,7 @@ return [
 
     'theme' => env('EVENT_THEME', "Saint, saint, saint est l'Éternel"),
 
-    'theme_reference' => env('EVENT_THEME_REFERENCE', 'Ésaïe 6:3'),
+    'theme_reference' => env('EVENT_THEME_REFERENCE'),
 
     'starts_at' => env('EVENT_STARTS_AT', '2026-11-29'),
 

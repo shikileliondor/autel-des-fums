@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        // Visitors who are not signed in must not learn where the admin sign-in is:
+        // a protected page answers 404 instead of redirecting to it.
+        $middleware->redirectGuestsTo(fn () => abort(404));
 
         $middleware->web(append: [
             HandleAppearance::class,
@@ -29,4 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Every unknown address gets the site's own 404 page.
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            if ($response->getStatusCode() !== 404 || $request->expectsJson()) {
+                return $response;
+            }
+
+            return Inertia::render('not-found')
+                ->toResponse($request)
+                ->setStatusCode(404);
+        });
     })->create();
