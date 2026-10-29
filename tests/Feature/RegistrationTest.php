@@ -2,6 +2,7 @@
 
 use App\Mail\RegistrationConfirmed;
 use App\Models\Registration;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -339,4 +340,44 @@ test('the qr code page shows the registrant without private details', function (
 
 test('the qr code page is a 404 for an unknown code', function () {
     $this->get('/inscrit/ADP-ZZZZZZ')->assertNotFound();
+});
+
+test('registrations are refused before the opening time', function () {
+    config(['event.registrations_open_at' => now()->addHour()->toDateTimeString()]);
+
+    $this->post(route('registration.store'), validRegistration())
+        ->assertSessionHasErrors('form');
+
+    expect(Registration::count())->toBe(0);
+});
+
+test('registrations are accepted once the opening time is reached', function () {
+    config(['event.registrations_open_at' => now('Africa/Abidjan')->subMinute()->toDateTimeString()]);
+
+    $this->post(route('registration.store'), validRegistration())
+        ->assertRedirect(route('registration.confirmed'));
+
+    expect(Registration::count())->toBe(1);
+});
+
+test('admins can register before the opening to test the form', function () {
+    config([
+        'event.registrations_open_at' => now()->addHour()->toDateTimeString(),
+        'event.admin_emails' => ['admin@example.com'],
+    ]);
+    $admin = User::factory()->create(['email' => 'admin@example.com']);
+
+    $this->actingAs($admin)
+        ->post(route('registration.store'), validRegistration())
+        ->assertRedirect(route('registration.confirmed'));
+});
+
+test('the opening time and server clock are shared with the pages', function () {
+    config(['event.registrations_open_at' => '2026-12-01 19:59']);
+
+    $this->get(route('registration.create'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('event.registrationsOpenAt', '2026-12-01T19:59:00+00:00')
+            ->has('event.serverTime')
+            ->where('canRegisterEarly', false));
 });

@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Check, Copy, Download, Share2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
+import Confetti from '@/components/event/confetti';
 import ContactPeople from '@/components/event/contact-people';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
 import { cn } from '@/lib/utils';
@@ -29,6 +29,7 @@ export default function RegistrationConfirmed({
     const isWoman = registration.gender === 'femme';
     const ordinal = ordinalOf(registration.rank, isWoman);
     const worshipper = isWoman ? 'adoratrice inscrite' : 'adorateur inscrit';
+    const isEarly = registration.rank <= EARLY_BIRDS;
 
     useEffect(() => {
         if (!autoDownload || downloaded.current) {
@@ -61,7 +62,7 @@ export default function RegistrationConfirmed({
 
     const shareMessage = [
         `🔥 Je serai à ${event.name}${date ? ` le ${date}` : ''} !`,
-        `Je suis ${isWoman ? 'la' : 'le'} ${ordinal} ${worshipper}.`,
+        `Je suis ${isWoman ? 'la' : 'le'} ${ordinal} ${worshipper}${isEarly ? ', parmi les 100 premiers 🏅' : ''}.`,
         `« ${event.theme} »`,
         '',
         `Inscris-toi toi aussi 👉 ${window.location.origin}${create.url({ query: { via: 'partage' } })}`,
@@ -88,7 +89,7 @@ export default function RegistrationConfirmed({
                     Ton inscription est confirmée. On a hâte d’adorer avec toi.
                 </p>
 
-                <div className="pop-in mt-8 w-full rounded-3xl bg-[#1c1410] px-6 py-8 text-white [animation-delay:0.25s] sm:px-10">
+                <div className="pop-in mt-8 w-full rounded-3xl bg-event-fg px-6 py-8 text-white [animation-delay:0.25s] sm:px-10">
                     <p className="text-sm font-semibold tracking-[0.25em] text-white/60 uppercase">
                         Tu es {isWoman ? 'la' : 'le'}
                     </p>
@@ -98,6 +99,11 @@ export default function RegistrationConfirmed({
                     <p className="mt-1 text-lg font-bold sm:text-xl">
                         {worshipper}
                     </p>
+                    {isEarly && (
+                        <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-event-accent px-4 py-1.5 text-sm font-bold text-white">
+                            🏅 Parmi les {EARLY_BIRDS} premiers
+                        </p>
+                    )}
                     <p className="mt-4 text-sm text-white/70">
                         {event.name}
                         {date && ` · ${date}`}
@@ -147,6 +153,9 @@ export default function RegistrationConfirmed({
         </EventShell>
     );
 }
+
+// Badge « Parmi les 100 premiers » sur la confirmation et le message partagé.
+const EARLY_BIRDS = 100;
 
 /** 1ᵉʳ / 1ʳᵉ, puis 2ᵉ, 3ᵉ… */
 function ordinalOf(rank: number, isWoman: boolean): string {
@@ -306,50 +315,5 @@ function ShareActions({ message }: { message: string }) {
                 </a>
             )}
         </section>
-    );
-}
-
-const CONFETTI_COLORS = ['#f9731a', '#c2410c', '#fbbf24', '#fde68a', '#1c1410'];
-
-/** Pluie de confettis aux couleurs du programme, jouée une seule fois. */
-function Confetti() {
-    const [pieces] = useState(() =>
-        Array.from({ length: 70 }, (_, i) => ({
-            left: Math.random() * 100,
-            drift: `${(Math.random() - 0.5) * 30}vw`,
-            delay: `${Math.random() * 0.8}s`,
-            duration: `${2.6 + Math.random() * 1.8}s`,
-            color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-            width: 6 + Math.random() * 6,
-            round: i % 4 === 0,
-        })),
-    );
-
-    return (
-        <div
-            aria-hidden
-            className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
-        >
-            {pieces.map((piece, i) => (
-                <span
-                    key={i}
-                    className="confetti absolute -top-4 block"
-                    style={
-                        {
-                            left: `${piece.left}%`,
-                            width: piece.width,
-                            height: piece.round
-                                ? piece.width
-                                : piece.width * 1.6,
-                            borderRadius: piece.round ? '9999px' : '2px',
-                            backgroundColor: piece.color,
-                            '--drift': piece.drift,
-                            '--delay': piece.delay,
-                            '--duration': piece.duration,
-                        } as CSSProperties
-                    }
-                />
-            ))}
-        </div>
     );
 }

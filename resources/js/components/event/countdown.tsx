@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
-function remaining(target: number) {
-    const diff = Math.max(0, target - Date.now());
-
+function parts(diff: number) {
     return {
         jours: Math.floor(diff / 86_400_000),
         heures: Math.floor(diff / 3_600_000) % 24,
@@ -13,17 +12,41 @@ function remaining(target: number) {
 
 export default function Countdown({ startsAt }: { startsAt: string }) {
     const target = new Date(startsAt).getTime();
-    const [time, setTime] = useState(() => remaining(target));
+    const [ms, setMs] = useState(() => Math.max(0, target - Date.now()));
 
     useEffect(() => {
-        const id = setInterval(() => setTime(remaining(target)), 1000);
+        const id = setInterval(
+            () => setMs(Math.max(0, target - Date.now())),
+            1000,
+        );
 
         return () => clearInterval(id);
     }, [target]);
 
+    return <CountdownDisplay ms={ms} />;
+}
+
+/** Les cases jours / heures / min / sec ; sans les jours quand il en reste moins d'un. */
+export function CountdownDisplay({
+    ms,
+    hideEmptyDays = false,
+}: {
+    ms: number;
+    hideEmptyDays?: boolean;
+}) {
+    const entries = Object.entries(parts(ms)).filter(
+        ([label, value]) =>
+            !(hideEmptyDays && label === 'jours' && value === 0),
+    );
+
     return (
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
-            {Object.entries(time).map(([label, value]) => (
+        <div
+            className={cn(
+                'grid gap-2 sm:gap-3',
+                entries.length === 4 ? 'grid-cols-4' : 'grid-cols-3',
+            )}
+        >
+            {entries.map(([label, value]) => (
                 <div
                     key={label}
                     className="rounded-2xl border border-event-border bg-event-surface/70 px-2 py-3 text-center sm:px-4 sm:py-4"

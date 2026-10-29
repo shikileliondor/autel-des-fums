@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\RegistrationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -90,6 +91,21 @@ class Registration extends Model
                 $registration->reference = static::generateReference();
             }
         });
+    }
+
+    /**
+     * When registrations open, or null when they are open right away.
+     */
+    public static function opensAt(): ?CarbonImmutable
+    {
+        $opensAt = config('event.registrations_open_at');
+
+        return $opensAt ? CarbonImmutable::parse($opensAt, 'Africa/Abidjan') : null;
+    }
+
+    public static function registrationsOpen(): bool
+    {
+        return ! static::opensAt()?->isFuture();
     }
 
     /**

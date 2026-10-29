@@ -1,11 +1,15 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { BellRing, PartyPopper } from 'lucide-react';
 import { useState } from 'react';
 import type { InputHTMLAttributes } from 'react';
+import Confetti from '@/components/event/confetti';
+import { CountdownDisplay } from '@/components/event/countdown';
 import EventShell from '@/components/event/event-shell';
+import { useRegistrationOpening } from '@/hooks/use-registration-opening';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { privacy } from '@/routes';
-import { store } from '@/routes/registration';
+import { create, store } from '@/routes/registration';
 
 // Doit rester identique à Registration::ROLES côté serveur.
 const ROLES = [
@@ -67,15 +71,50 @@ function Field({
     );
 }
 
-export default function RegistrationCreate() {
+export default function RegistrationCreate({
+    canRegisterEarly,
+}: {
+    /** Admins : peuvent tester le formulaire avant l'ouverture. */
+    canRegisterEarly: boolean;
+}) {
     const [isMember, setIsMember] = useState(false);
     const [role, setRole] = useState('');
+    const opening = useRegistrationOpening();
+    // Fermé à l'arrivée sur la page : on fête l'ouverture quand elle arrive.
+    const [openedLive] = useState(!opening.isOpen);
+
+    if (!opening.isOpen && !canRegisterEarly) {
+        return (
+            <WaitingRoom remaining={opening.remaining} label={opening.label} />
+        );
+    }
 
     return (
         <EventShell>
             <Head title="Inscription" />
+            {openedLive && opening.isOpen && <Confetti />}
 
             <div className="mx-auto max-w-xl">
+                {openedLive && opening.isOpen && (
+                    <div className="pop-in mb-8 flex items-center gap-3 rounded-2xl bg-event-accent p-4 text-left text-white shadow-lg shadow-event-accent/30">
+                        <PartyPopper className="size-8 shrink-0" />
+                        <div>
+                            <p className="text-lg font-extrabold">
+                                C’est ouvert ! 🔥
+                            </p>
+                            <p className="text-sm opacity-90">
+                                Inscris-toi vite pour être parmi les 100
+                                premiers.
+                            </p>
+                        </div>
+                    </div>
+                )}
+                {!opening.isOpen && canRegisterEarly && (
+                    <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-center text-sm text-amber-900">
+                        Mode test admin : les inscriptions ouvrent{' '}
+                        {opening.label} pour le public.
+                    </p>
+                )}
                 <div className="flex flex-col items-center text-center">
                     <h1 className="text-3xl font-extrabold tracking-tight text-event-fg sm:text-5xl">
                         Inscription.
@@ -244,6 +283,12 @@ export default function RegistrationCreate() {
                                 )}
                             </div>
 
+                            {errors.form && (
+                                <p className="rounded-xl bg-red-50 p-3 text-center text-sm font-semibold text-red-700">
+                                    {errors.form}
+                                </p>
+                            )}
+
                             <button
                                 type="submit"
                                 disabled={processing}
@@ -266,6 +311,62 @@ export default function RegistrationCreate() {
                         </>
                     )}
                 </Form>
+            </div>
+        </EventShell>
+    );
+}
+
+/** Avant l'ouverture : compte à rebours, puis le formulaire s'affiche tout seul. */
+function WaitingRoom({
+    remaining,
+    label,
+}: {
+    remaining: number;
+    label: string | null;
+}) {
+    const { event } = usePage().props;
+    const message = [
+        `🔥 Les inscriptions pour ${event.name} ouvrent ${label} !`,
+        'Sois prêt·e, les 100 premiers auront un badge spécial.',
+        '',
+        `👉 ${window.location.origin}${create.url()}`,
+    ].join('\n');
+
+    return (
+        <EventShell className="flex items-center">
+            <Head title="Ouverture des inscriptions" />
+
+            <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
+                <span className="inline-flex items-center gap-2 rounded-full bg-event-accent/10 px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-event-accent-ink uppercase">
+                    <BellRing className="size-4" />
+                    Bientôt
+                </span>
+                <h1 className="mt-5 text-4xl leading-tight font-extrabold tracking-tight text-event-fg sm:text-5xl">
+                    Les inscriptions ouvrent{' '}
+                    <span className="text-event-accent">{label}</span>.
+                </h1>
+                <p className="mt-4 text-event-muted">
+                    Reste sur cette page : le formulaire s’ouvrira tout seul à
+                    l’heure pile. Les 100 premiers inscrits auront un badge
+                    spécial.
+                </p>
+
+                <div className="mt-8 w-full">
+                    <CountdownDisplay ms={remaining} hideEmptyDays />
+                </div>
+
+                <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#25d366] px-6 text-sm font-bold text-white transition hover:brightness-105"
+                >
+                    Prévenir mes proches sur WhatsApp
+                </a>
+                <p className="mt-4 text-xs text-event-muted">
+                    Astuce : prépare ton nom et ton numéro, l’inscription prend
+                    une minute.
+                </p>
             </div>
         </EventShell>
     );

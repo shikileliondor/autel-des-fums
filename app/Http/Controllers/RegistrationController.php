@@ -29,9 +29,12 @@ class RegistrationController extends Controller
     /**
      * Show the public registration form.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('registration/create');
+        return Inertia::render('registration/create', [
+            // Admins can register before the opening, to test the form.
+            'canRegisterEarly' => $request->user()?->can('manage-registrations') ?? false,
+        ]);
     }
 
     /**
@@ -39,6 +42,11 @@ class RegistrationController extends Controller
      */
     public function store(StoreRegistrationRequest $request): RedirectResponse
     {
+        // The countdown hides the form, but only the server can really keep it closed.
+        if (! Registration::registrationsOpen() && ! $request->user()?->can('manage-registrations')) {
+            return back()->withInput()->withErrors(['form' => 'Les inscriptions ne sont pas encore ouvertes. Patiente jusqu’à l’ouverture.']);
+        }
+
         try {
             $registration = Registration::create($request->safe()->except(['role_choice', 'role_other']));
         } catch (UniqueConstraintViolationException) {

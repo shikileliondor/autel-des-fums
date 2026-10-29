@@ -29,6 +29,9 @@ return [
     // Affichés sur la page Confidentialité pour l'exercice des droits.
     'contact_email' => env('EVENT_CONTACT_EMAIL', env('MAIL_FROM_ADDRESS')),
 
+    // Registrations open at this time (Abidjan time). Empty: open right away.
+    'registrations_open_at' => env('EVENT_REGISTRATION_OPENS_AT', '2026-10-29 19:59') ?: null,
+
     // Single number for WhatsApp and calls. WhatsApp knows it by its old 8-digit form
     // (before the 2021 switch to 10 digits). "?:" also covers an empty value in .env.
     'contact_phone' => env('EVENT_CONTACT_PHONE') ?: '+225 79 17 79 48',

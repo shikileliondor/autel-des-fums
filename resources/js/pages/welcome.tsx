@@ -7,6 +7,7 @@ import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
 import PhotoMosaic from '@/components/event/photo-mosaic';
 import WelcomeModal from '@/components/event/welcome-modal';
 import { formatPrice, products } from '@/lib/boutique';
+import { useRegistrationOpening } from '@/hooks/use-registration-opening';
 import { revealDelay } from '@/hooks/use-reveal';
 import { boutique } from '@/routes';
 import { create } from '@/routes/registration';
@@ -125,7 +126,7 @@ export default function Welcome() {
                     style={revealDelay(100)}
                     className="group mt-8 inline-flex items-center gap-2 rounded-full bg-event-accent px-8 py-4 text-base font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110"
                 >
-                    Je m’inscris
+                    <RegisterLabel />
                     <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />
                 </Link>
 
@@ -284,10 +285,17 @@ export default function Welcome() {
                     href={create()}
                     className="mt-8 inline-flex items-center gap-2 rounded-full bg-event-accent px-8 py-4 font-bold text-white shadow-lg shadow-event-accent/30 transition hover:brightness-110"
                 >
-                    Je m’inscris
+                    <RegisterLabel />
                     <ArrowRight className="size-5" />
                 </Link>
             </section>
         </EventShell>
     );
+}
+
+/** « Je m'inscris », ou l'heure d'ouverture tant que les inscriptions sont fermées. */
+function RegisterLabel() {
+    const { isOpen, label } = useRegistrationOpening();
+
+    return isOpen ? 'Je m’inscris' : `Ouverture ${label}`;
 }

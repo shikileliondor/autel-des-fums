@@ -13,6 +13,10 @@ export type EventInfo = {
     contactPhone: string | null;
     /** Personnes à contacter en cas de besoin (config/event.php). */
     contacts: { name: string; phone: string; whatsapp: string }[];
+    /** Ouverture des inscriptions, null si elles sont ouvertes dès maintenant. */
+    registrationsOpenAt: string | null;
+    /** Heure du serveur (ms) au chargement de la page. */
+    serverTime: number;
 };
 
 export type RegistrationRow = {

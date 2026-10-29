@@ -61,6 +61,9 @@ class HandleInertiaRequests extends Middleware
                 'contactEmail' => config('event.contact_email'),
                 'contactPhone' => config('event.contact_phone'),
                 'contacts' => config('event.contacts'),
+                'registrationsOpenAt' => Registration::opensAt()?->toIso8601String(),
+                // Server clock in ms: countdowns follow it, not a phone that is a few minutes off.
+                'serverTime' => now()->getTimestampMs(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
