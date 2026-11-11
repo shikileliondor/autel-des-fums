@@ -1,11 +1,18 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Check, Copy, Download, Share2 } from 'lucide-react';
+import {
+    ArrowRight,
+    Camera,
+    Check,
+    Copy,
+    Download,
+    Share2,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Confetti from '@/components/event/confetti';
 import ContactPeople from '@/components/event/contact-people';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
 import { cn } from '@/lib/utils';
-import { home } from '@/routes';
+import { home, visual } from '@/routes';
 import { create, pdf } from '@/routes/registration';
 
 type Props = {
@@ -109,6 +116,28 @@ export default function RegistrationConfirmed({
                         {date && ` · ${date}`}
                     </p>
                 </div>
+
+                <Link
+                    href={visual({ query: { prenom: registration.firstName } })}
+                    className="group pop-in mt-8 flex w-full items-center gap-4 rounded-3xl border-2 border-event-accent bg-gradient-to-br from-[#fff7ed] to-white p-4 text-left shadow-lg shadow-event-accent/15 transition [animation-delay:0.4s] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-event-accent/25 sm:p-5"
+                >
+                    <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-event-accent text-white shadow-md shadow-event-accent/40">
+                        <Camera className="size-7" />
+                    </span>
+                    <span className="flex-1">
+                        <span className="block text-base font-extrabold text-event-fg sm:text-lg">
+                            Crée ton visuel{' '}
+                            <span className="font-charm text-event-accent-ink">
+                                « J’y serai ! »
+                            </span>
+                        </span>
+                        <span className="mt-0.5 block text-sm text-event-muted">
+                            Ta photo dans le cadre officiel, prête pour ton
+                            statut WhatsApp.
+                        </span>
+                    </span>
+                    <ArrowRight className="size-5 shrink-0 text-event-accent-ink transition group-hover:translate-x-1" />
+                </Link>
 
                 <ShareActions message={shareMessage} />
 

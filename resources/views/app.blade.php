@@ -1,6 +1,6 @@
 @php
     // Site public de l'événement (pas l'espace organisateurs) : écran de chargement.
-    $isPublicPage = in_array($page['component'], ['welcome', 'privacy', 'boutique', 'not-found'], true)
+    $isPublicPage = in_array($page['component'], ['welcome', 'privacy', 'boutique', 'visual', 'not-found'], true)
         || str_starts_with($page['component'], 'registration/');
 @endphp
 <!DOCTYPE html>

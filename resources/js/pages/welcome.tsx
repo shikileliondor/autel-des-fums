@@ -1,5 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, CalendarDays, MapPin, ShoppingBag } from 'lucide-react';
+import {
+    ArrowRight,
+    CalendarDays,
+    Camera,
+    MapPin,
+    ShoppingBag,
+} from 'lucide-react';
 import ContactPeople from '@/components/event/contact-people';
 import Countdown from '@/components/event/countdown';
 import DirectionsDialog from '@/components/event/directions-dialog';
@@ -9,7 +15,7 @@ import WelcomeModal from '@/components/event/welcome-modal';
 import { formatPrice, products } from '@/lib/boutique';
 import { useRegistrationOpening } from '@/hooks/use-registration-opening';
 import { revealDelay } from '@/hooks/use-reveal';
-import { boutique } from '@/routes';
+import { boutique, visual } from '@/routes';
 import { create } from '@/routes/registration';
 
 // Église Foursquare Niangon Révélation, Abidjan.
@@ -128,6 +134,16 @@ export default function Welcome() {
                 >
                     <RegisterLabel />
                     <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />
+                </Link>
+
+                <Link
+                    href={visual()}
+                    data-reveal
+                    style={revealDelay(150)}
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-event-accent-ink hover:text-event-fg"
+                >
+                    <Camera className="size-4" />
+                    Crée ton visuel « J’y serai ! »
                 </Link>
 
                 {event.startsAt && (

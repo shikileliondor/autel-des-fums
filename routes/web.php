@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 Route::inertia('confidentialite', 'privacy')->name('privacy');
 Route::inertia('boutique', 'boutique')->name('boutique');
+// "J'y serai !" visual: built in the browser, the photo is never uploaded.
+Route::inertia('j-y-serai', 'visual')->name('visual');
 
 Route::get('inscription', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('inscription', [RegistrationController::class, 'store'])

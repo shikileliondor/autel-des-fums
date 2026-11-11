@@ -219,6 +219,12 @@ test('the boutique page can be displayed', function () {
         ->assertInertia(fn (Assert $page) => $page->component('boutique'));
 });
 
+test('the "j\'y serai" visual page can be displayed', function () {
+    $this->get(route('visual', ['prenom' => 'Ange']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('visual'));
+});
+
 test('the pdf is generated once then served from disk', function () {
     Storage::fake('local');
     $this->post(route('registration.store'), validRegistration());
