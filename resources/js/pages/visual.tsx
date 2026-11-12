@@ -333,7 +333,7 @@ export default function Visual() {
         <EventShell>
             <Head title="Mon visuel « J’y serai ! »" />
 
-            <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-x-16 lg:gap-y-8">
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,25rem)_1fr] lg:gap-x-16 lg:gap-y-8">
                 <header className="text-center lg:col-start-2 lg:text-left">
                     <p className="mb-3 text-xs font-bold tracking-[0.3em] text-event-accent-ink uppercase sm:text-sm">
                         — Fais passer le mot
@@ -352,7 +352,7 @@ export default function Visual() {
 
                 <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1">
                     <div className="lg:sticky lg:top-28">
-                        <div className="relative mx-auto w-full max-w-[18rem] sm:max-w-[20rem] lg:max-w-none">
+                        <div className="relative mx-auto w-full max-w-[21rem] sm:max-w-[24rem] lg:max-w-none">
                             <div
                                 aria-hidden
                                 className="absolute inset-x-8 top-16 bottom-10 rounded-full bg-event-accent/45 blur-3xl"

@@ -3,7 +3,8 @@
  * un canvas, directement dans le navigateur. La photo ne quitte jamais l'appareil.
  *
  * Trois couches superposées : le décor (fond, logos, date), la photo découpée
- * en arche, puis l'habillage de l'arche (lueur, « J'y serai ! », prénom).
+ * en arche, puis l'habillage (bordure, prénom, « J'y serai ! »). La photo reste
+ * nette : aucun texte ni dégradé ne la recouvre, à part le prénom posé sur le bord.
  * Le décor et l'habillage sont préparés une fois : seul le collage de la photo
  * est refait pendant qu'on la déplace.
  */
@@ -14,7 +15,7 @@ export const VISUAL_WIDTH = 1080;
 export const VISUAL_HEIGHT = 1920;
 
 /** Fenêtre en arche où se place la photo. */
-export const FRAME = { x: 170, y: 485, width: 740, height: 870 };
+export const FRAME = { x: 100, y: 340, width: 880, height: 930 };
 
 export const MAX_ZOOM = 3;
 
@@ -43,6 +44,11 @@ type Rect = { x: number; y: number; width: number; height: number };
 
 const CENTER_X = VISUAL_WIDTH / 2;
 const FRAME_BOTTOM = FRAME.y + FRAME.height;
+// Sous l'arche, de haut en bas : « J'y serai ! », thème, date et lieu, lien.
+const TITLE_Y = FRAME_BOTTOM + 222;
+const THEME_Y = TITLE_Y + 88;
+const DATE_Y = THEME_Y + 30;
+const LINK_Y = DATE_Y + 192;
 const SANS = '"Instrument Sans", system-ui, sans-serif';
 const SCRIPT = 'Charm, cursive';
 // Photo réduite à l'import : assez pour un zoom ×3 net, sans saturer la mémoire du téléphone.
@@ -151,20 +157,20 @@ export function renderScene(
     drawBackground(ctx);
 
     // Logos, comme en tête de l'affiche officielle.
-    const churchWidth = 300;
+    const churchWidth = 250;
     const churchHeight =
         (assets.church.height / assets.church.width) * churchWidth;
     ctx.globalAlpha = 0.92;
     ctx.drawImage(
         assets.church,
         CENTER_X - churchWidth / 2,
-        112,
+        58,
         churchWidth,
         churchHeight,
     );
     ctx.globalAlpha = 1;
 
-    const logoWidth = 520;
+    const logoWidth = 390;
     const logoHeight =
         (assets.logo.naturalHeight / assets.logo.naturalWidth) * logoWidth;
     ctx.save();
@@ -173,7 +179,7 @@ export function renderScene(
     ctx.drawImage(
         assets.logo,
         CENTER_X - logoWidth / 2,
-        198,
+        118,
         logoWidth,
         logoHeight,
     );
@@ -181,96 +187,76 @@ export function renderScene(
 
     if (info.edition) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        fitFont(ctx, info.edition, 700, 26, SANS, 760, 9);
-        spacedText(ctx, info.edition, CENTER_X, 444, 9);
+        fitFont(ctx, info.edition, 700, 24, SANS, 760, 8);
+        spacedText(ctx, info.edition, CENTER_X, 306, 8);
     }
+
+    // Halo de l'arche, posé sous la photo : il rayonne autour sans la voiler.
+    ctx.save();
+    ctx.shadowColor = 'rgba(249, 115, 26, 0.95)';
+    ctx.shadowBlur = 80;
+    ctx.strokeStyle = '#f9731a';
+    ctx.lineWidth = 12;
+    archPath(ctx, FRAME);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
     ctx.textAlign = 'center';
-    fitFont(ctx, info.theme, 400, 52, SCRIPT, 880);
-    ctx.fillText(info.theme, CENTER_X, FRAME_BOTTOM + 114);
+    fitFont(ctx, info.theme, 400, 40, SCRIPT, 880);
+    ctx.fillText(info.theme, CENTER_X, THEME_Y);
 
     drawDateBlock(ctx, info);
 
     // Lien d'inscription, pour ceux qui verront le statut.
     const link = `Inscris-toi sur ${info.link}`;
-    ctx.font = `600 28px ${SANS}`;
+    ctx.font = `600 26px ${SANS}`;
     const linkWidth = Math.min(ctx.measureText(link).width, 860);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     roundRectPath(
         ctx,
-        CENTER_X - linkWidth / 2 - 34,
-        1738,
-        linkWidth + 68,
-        64,
-        32,
+        CENTER_X - linkWidth / 2 - 32,
+        LINK_Y,
+        linkWidth + 64,
+        58,
+        29,
     );
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.fillText(link, CENTER_X, 1780, 860);
+    ctx.fillText(link, CENTER_X, LINK_Y + 38, 860);
 
     return canvas;
 }
 
-/** Habillage de l'arche, posé par-dessus la photo. */
+/** Habillage posé par-dessus la photo : bordure, prénom et « J'y serai ! » sous l'arche. */
 export function renderFrame(name: string): HTMLCanvasElement {
     const { canvas, ctx } = createCanvas(VISUAL_WIDTH, VISUAL_HEIGHT);
 
-    // Bas de la photo assombri pour que « J'y serai ! » reste lisible.
-    ctx.save();
-    archPath(ctx, FRAME);
-    ctx.clip();
-    const shade = ctx.createLinearGradient(
-        0,
-        FRAME_BOTTOM - 470,
-        0,
-        FRAME_BOTTOM,
-    );
-    shade.addColorStop(0, 'rgba(12, 9, 7, 0)');
-    shade.addColorStop(0.5, 'rgba(12, 9, 7, 0.6)');
-    shade.addColorStop(1, 'rgba(12, 9, 7, 0.94)');
-    ctx.fillStyle = shade;
-    ctx.fillRect(FRAME.x, FRAME_BOTTOM - 470, FRAME.width, 470);
-    ctx.restore();
-
-    // Bordure lumineuse, comme une flamme autour de l'autel.
+    // Bordure lumineuse, comme une flamme autour de l'autel (le halo est dans le décor).
     const border = ctx.createLinearGradient(0, FRAME.y, 0, FRAME_BOTTOM);
     border.addColorStop(0, '#fde68a');
     border.addColorStop(0.35, '#f9731a');
     border.addColorStop(1, '#c2410c');
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(249, 115, 26, 0.95)';
-    ctx.shadowBlur = 80;
-    ctx.strokeStyle = border;
-    ctx.lineWidth = 10;
-    archPath(ctx, FRAME);
-    ctx.stroke();
-    ctx.restore();
     ctx.strokeStyle = border;
     ctx.lineWidth = 10;
     archPath(ctx, FRAME);
     ctx.stroke();
 
-    ctx.strokeStyle = 'rgba(255, 237, 213, 0.5)';
-    ctx.lineWidth = 2;
-    archPath(ctx, inset(FRAME, 22), 26);
-    ctx.stroke();
+    const cleanName = name.trim();
+
+    if (cleanName) {
+        drawNamePill(ctx, cleanName.toLocaleUpperCase('fr'));
+    }
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `700 36px ${SANS}`;
-    spacedText(ctx, 'MOI AUSSI,', CENTER_X, FRAME_BOTTOM - 262, 12);
+    ctx.font = `700 32px ${SANS}`;
+    spacedText(ctx, 'MOI AUSSI,', CENTER_X, FRAME_BOTTOM + 96, 12);
 
     const title = 'J’y serai !';
-    const ink = ctx.createLinearGradient(
-        0,
-        FRAME_BOTTOM - 290,
-        0,
-        FRAME_BOTTOM - 120,
-    );
+    const ink = ctx.createLinearGradient(0, TITLE_Y - 110, 0, TITLE_Y + 10);
     ink.addColorStop(0, '#fef3c7');
     ink.addColorStop(0.45, '#fdba74');
     ink.addColorStop(1, '#f9731a');
@@ -280,15 +266,9 @@ export function renderFrame(name: string): HTMLCanvasElement {
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = ink;
     ctx.textAlign = 'center';
-    fitFont(ctx, title, 700, 176, SCRIPT, FRAME.width - 90);
-    ctx.fillText(title, CENTER_X, FRAME_BOTTOM - 128);
+    fitFont(ctx, title, 700, 140, SCRIPT, FRAME.width - 60);
+    ctx.fillText(title, CENTER_X, TITLE_Y);
     ctx.restore();
-
-    const cleanName = name.trim();
-
-    if (cleanName) {
-        drawNamePill(ctx, cleanName.toLocaleUpperCase('fr'));
-    }
 
     return canvas;
 }
@@ -362,19 +342,19 @@ function drawBackground(ctx: CanvasRenderingContext2D) {
 /** Date à gauche en grand, église et lieu à droite (comme l'affiche). */
 function drawDateBlock(ctx: CanvasRenderingContext2D, info: VisualInfo) {
     const gap = 40;
-    const top = 1505;
+    const top = DATE_Y;
 
     const left = [
-        { text: info.weekday, font: `700 30px ${SANS}`, spacing: 12 },
-        { text: info.day, font: `700 112px ${SANS}`, spacing: 0 },
-        { text: info.year, font: `700 30px ${SANS}`, spacing: 12 },
+        { text: info.weekday, font: `700 26px ${SANS}`, spacing: 12 },
+        { text: info.day, font: `700 100px ${SANS}`, spacing: 0 },
+        { text: info.year, font: `700 26px ${SANS}`, spacing: 12 },
     ];
     const right = [
-        { text: info.church[0], font: `700 42px ${SANS}`, color: '#ffffff' },
-        { text: info.church[1], font: `700 42px ${SANS}`, color: '#fb923c' },
+        { text: info.church[0], font: `700 38px ${SANS}`, color: '#ffffff' },
+        { text: info.church[1], font: `700 38px ${SANS}`, color: '#fb923c' },
         {
             text: info.place,
-            font: `600 32px ${SANS}`,
+            font: `600 30px ${SANS}`,
             color: 'rgba(255, 255, 255, 0.82)',
         },
     ];
@@ -411,26 +391,26 @@ function drawDateBlock(ctx: CanvasRenderingContext2D, info: VisualInfo) {
 
         if (left[0].text) {
             ctx.font = left[0].font;
-            spacedText(ctx, left[0].text, leftCenter, top + 36, 12);
+            spacedText(ctx, left[0].text, leftCenter, top + 30, 12);
         }
 
-        const big = ctx.createLinearGradient(0, top + 60, 0, top + 150);
+        const big = ctx.createLinearGradient(0, top + 52, 0, top + 130);
         big.addColorStop(0, '#fdba74');
         big.addColorStop(1, '#ea580c');
         ctx.fillStyle = big;
         ctx.font = left[1].font;
         ctx.textAlign = 'center';
-        ctx.fillText(info.day ?? '', leftCenter, top + 142, leftWidth);
+        ctx.fillText(info.day ?? '', leftCenter, top + 124, leftWidth);
 
         if (left[2].text) {
             ctx.fillStyle = '#ffffff';
             ctx.font = left[2].font;
-            spacedText(ctx, left[2].text, leftCenter, top + 188, 12);
+            spacedText(ctx, left[2].text, leftCenter, top + 164, 12);
         }
 
         const dividerX = startX + leftWidth + gap;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.fillRect(dividerX - 1.5, top, 3, 196);
+        ctx.fillRect(dividerX - 1.5, top, 3, 170);
     }
 
     const rightX = hasDate ? startX + leftWidth + gap * 2 : CENTER_X;
@@ -438,17 +418,17 @@ function drawDateBlock(ctx: CanvasRenderingContext2D, info: VisualInfo) {
     right.forEach(({ text, font, color }, index) => {
         ctx.font = font;
         ctx.fillStyle = color;
-        ctx.fillText(text, rightX, top + 62 + index * 54, rightWidth);
+        ctx.fillText(text, rightX, top + 54 + index * 48, rightWidth);
     });
     ctx.textAlign = 'center';
 }
 
 function drawNamePill(ctx: CanvasRenderingContext2D, name: string) {
     const spacing = 5;
-    const size = fitFont(ctx, name, 700, 42, SANS, 560, spacing);
+    const size = fitFont(ctx, name, 700, 38, SANS, 560, spacing);
     const textWidth = spacedWidth(ctx, name, spacing);
-    const width = textWidth + 100;
-    const height = 92;
+    const width = textWidth + 96;
+    const height = 84;
     const x = CENTER_X - width / 2;
     const y = FRAME_BOTTOM - height / 2;
 
@@ -485,10 +465,10 @@ function drawSilhouette(ctx: CanvasRenderingContext2D) {
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
     ctx.beginPath();
-    ctx.arc(CENTER_X, 790, 120, 0, Math.PI * 2);
+    ctx.arc(CENTER_X, FRAME.y + FRAME.height * 0.4, 140, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(CENTER_X, 1190, 280, 240, 0, 0, Math.PI * 2);
+    ctx.ellipse(CENTER_X, FRAME_BOTTOM - 20, 320, 260, 0, 0, Math.PI * 2);
     ctx.fill();
 }
 
@@ -575,15 +555,6 @@ function roundRectPath(
     ctx.arcTo(x, y + height, x, y, radius);
     ctx.arcTo(x, y, x + width, y, radius);
     ctx.closePath();
-}
-
-function inset(rect: Rect, by: number): Rect {
-    return {
-        x: rect.x + by,
-        y: rect.y + by,
-        width: rect.width - by * 2,
-        height: rect.height - by * 2,
-    };
 }
 
 function glow(
