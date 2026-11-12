@@ -1,10 +1,10 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, ShoppingBag, X } from 'lucide-react';
+import { Camera, Menu, ShoppingBag, X } from 'lucide-react';
 import { useState } from 'react';
 import { EventLogo } from '@/components/event/event-shell';
 import { useCartCount } from '@/lib/boutique';
 import { cn } from '@/lib/utils';
-import { boutique, home } from '@/routes';
+import { boutique, home, visual } from '@/routes';
 import { create } from '@/routes/registration';
 
 const links = [
@@ -12,6 +12,8 @@ const links = [
     { label: 'Boutique', href: boutique().url },
     { label: 'Inscription', href: create().url },
 ];
+
+const visualLabel = 'Mon visuel « J’y serai ! »';
 
 export default function EventNavbar() {
     const { url } = usePage();
@@ -43,9 +45,35 @@ export default function EventNavbar() {
                             </Link>
                         </li>
                     ))}
+                    <li>
+                        <Link
+                            href={visual().url}
+                            aria-label={visualLabel}
+                            title={visualLabel}
+                            className={cn(
+                                '-mx-2 flex size-10 items-center justify-center rounded-xl text-event-accent-ink transition hover:bg-event-surface',
+                                isActive(visual().url) && 'bg-event-surface',
+                            )}
+                        >
+                            <Camera className="size-5" />
+                        </Link>
+                    </li>
                 </ul>
 
                 <div className="flex items-center gap-2">
+                    {/* Sur téléphone, toujours visible à côté du panier (sur ordinateur, elle est dans les liens). */}
+                    <Link
+                        href={visual().url}
+                        aria-label={visualLabel}
+                        title={visualLabel}
+                        className={cn(
+                            'flex size-12 items-center justify-center rounded-xl text-event-accent-ink transition hover:bg-event-surface md:hidden',
+                            isActive(visual().url) && 'bg-event-surface',
+                        )}
+                    >
+                        <Camera className="size-6" />
+                    </Link>
+
                     <Link
                         href={`${boutique().url}#panier`}
                         aria-label={`Panier (${cartCount} article${cartCount > 1 ? 's' : ''})`}
@@ -93,6 +121,21 @@ export default function EventNavbar() {
                             </Link>
                         </li>
                     ))}
+                    <li>
+                        <Link
+                            href={visual().url}
+                            onClick={() => setOpen(false)}
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg px-3 py-3 text-base font-semibold',
+                                isActive(visual().url)
+                                    ? 'bg-event-surface text-event-accent-ink'
+                                    : 'text-event-fg',
+                            )}
+                        >
+                            <Camera className="size-5 text-event-accent-ink" />
+                            {visualLabel}
+                        </Link>
+                    </li>
                 </ul>
             )}
         </header>
