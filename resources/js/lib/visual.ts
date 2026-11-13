@@ -34,6 +34,7 @@ type VisualInfo = {
     weekday: string | null;
     day: string | null;
     year: string | null;
+    time: string | null;
     church: [string, string];
     place: string;
     theme: string;
@@ -344,10 +345,26 @@ function drawDateBlock(ctx: CanvasRenderingContext2D, info: VisualInfo) {
     const gap = 40;
     const top = DATE_Y;
 
+    // The time takes the year's place, bigger: the year is already in the edition line.
+    const last = info.time
+        ? {
+              text: info.time,
+              font: `700 40px ${SANS}`,
+              spacing: 6,
+              color: '#fdba74',
+              y: 174,
+          }
+        : {
+              text: info.year,
+              font: `700 26px ${SANS}`,
+              spacing: 12,
+              color: '#ffffff',
+              y: 164,
+          };
     const left = [
         { text: info.weekday, font: `700 26px ${SANS}`, spacing: 12 },
         { text: info.day, font: `700 100px ${SANS}`, spacing: 0 },
-        { text: info.year, font: `700 26px ${SANS}`, spacing: 12 },
+        last,
     ];
     const right = [
         { text: info.church[0], font: `700 38px ${SANS}`, color: '#ffffff' },
@@ -402,15 +419,15 @@ function drawDateBlock(ctx: CanvasRenderingContext2D, info: VisualInfo) {
         ctx.textAlign = 'center';
         ctx.fillText(info.day ?? '', leftCenter, top + 124, leftWidth);
 
-        if (left[2].text) {
-            ctx.fillStyle = '#ffffff';
-            ctx.font = left[2].font;
-            spacedText(ctx, left[2].text, leftCenter, top + 164, 12);
+        if (last.text) {
+            ctx.fillStyle = last.color;
+            ctx.font = last.font;
+            spacedText(ctx, last.text, leftCenter, top + last.y, last.spacing);
         }
 
         const dividerX = startX + leftWidth + gap;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.fillRect(dividerX - 1.5, top, 3, 170);
+        ctx.fillRect(dividerX - 1.5, top, 3, last.y + 6);
     }
 
     const rightX = hasDate ? startX + leftWidth + gap * 2 : CENTER_X;
@@ -486,7 +503,8 @@ function visualInfo(event: EventInfo, host: string): VisualInfo {
 
     const year = part({ year: 'numeric' });
     const time = event.hasTime
-        ? part({ hour: '2-digit', minute: '2-digit' })?.replace(':', 'H')
+        ? (part({ hour: '2-digit', minute: '2-digit' })?.replace(':', 'H') ??
+          null)
         : null;
     const day = part({ day: 'numeric' });
 
@@ -494,7 +512,8 @@ function visualInfo(event: EventInfo, host: string): VisualInfo {
         edition: year ? `ÉDITION ${part({ month: 'long' })} ${year}` : null,
         weekday: part({ weekday: 'long' }),
         day: day ? `${day} ${part({ month: 'short' })}` : null,
-        year: [year, time].filter(Boolean).join(' · ') || null,
+        year,
+        time,
         church: splitInTwo(event.hostChurch.toLocaleUpperCase('fr')),
         place: event.venue ?? event.city,
         theme: event.theme,
