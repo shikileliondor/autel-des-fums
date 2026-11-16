@@ -20,7 +20,7 @@ return [
 
     'theme_reference' => env('EVENT_THEME_REFERENCE'),
 
-    'starts_at' => env('EVENT_STARTS_AT', '2026-11-29'),
+    'starts_at' => env('EVENT_STARTS_AT', '2026-11-29 14:00'),
 
     'city' => env('EVENT_CITY', 'Abidjan'),
 
