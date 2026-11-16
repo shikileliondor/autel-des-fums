@@ -38,6 +38,12 @@ class AppServiceProvider extends ServiceProvider
         ));
 
         $this->configureRegistrationRateLimit();
+
+        // Wall uploads: plenty for a family sharing one connection, not enough to flood the wall.
+        RateLimiter::for('visuals', fn (Request $request) => [
+            Limit::perMinute(10)->by('visuals-minute:'.$request->ip()),
+            Limit::perHour(60)->by('visuals-hour:'.$request->ip()),
+        ]);
     }
 
     /**

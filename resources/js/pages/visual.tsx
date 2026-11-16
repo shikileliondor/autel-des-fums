@@ -5,6 +5,7 @@ import {
     Check,
     Download,
     ImagePlus,
+    Images,
     LoaderCircle,
     Lock,
     Move,
@@ -21,6 +22,7 @@ import type {
     ReactNode,
 } from 'react';
 import EventShell, { EVENT_TIMEZONE } from '@/components/event/event-shell';
+import VisualWall from '@/components/event/visual-wall';
 import { cn } from '@/lib/utils';
 import {
     CENTERED,
@@ -36,6 +38,8 @@ import {
     VISUAL_WIDTH,
 } from '@/lib/visual';
 import type { Placement, VisualAssets } from '@/lib/visual';
+import { useVisualWall } from '@/lib/visual-wall';
+import type { WallPage } from '@/lib/visual-wall';
 import { create } from '@/routes/registration';
 
 const FILE_NAME = 'j-y-serai-autel-des-parfums.jpg';
@@ -48,9 +52,11 @@ const buttonClass =
 const primaryClass =
     'bg-event-accent text-white shadow-lg shadow-event-accent/30 hover:brightness-110 disabled:shadow-none disabled:hover:brightness-100';
 
-export default function Visual() {
+type WallStatus = 'idle' | 'sending' | 'done' | 'error';
+
+export default function Visual({ wall: initialWall }: { wall: WallPage }) {
     const { props, url } = usePage();
-    const { event } = props;
+    const { event, auth } = props;
     const query = new URLSearchParams(url.split('?')[1] ?? '');
     // Arrivé depuis la confirmation d'inscription : prénom déjà connu, inutile de proposer l'inscription.
     const fromRegistration = query.has('prenom');
@@ -71,6 +77,14 @@ export default function Visual() {
     const [photoError, setPhotoError] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
     const [canShareFiles] = useState(canShareImages);
+
+    const wall = useVisualWall(initialWall);
+    // Décoché par défaut : rien ne part sur le mur sans l'accord de la personne.
+    const [showOnWall, setShowOnWall] = useState(false);
+    const [wallStatus, setWallStatus] = useState<WallStatus>('idle');
+    // Numéro du dessin affiché, et celui déjà publié : pas de doublon si on enregistre deux fois.
+    const drawCount = useRef(0);
+    const publishedDraw = useRef<number | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -104,6 +118,7 @@ export default function Visual() {
         }
 
         drawVisual(ctx, scene, frame, photo, placement);
+        drawCount.current++;
         fileRef.current = null;
 
         if (!photo) {
@@ -168,6 +183,7 @@ export default function Visual() {
             setPhoto(await preparePhoto(file));
             setPlacement(CENTERED);
             setSaved(false);
+            setWallStatus('idle');
         } catch {
             setPhotoError(
                 'Cette photo n’a pas pu être ouverte. Essaie avec une autre image (JPG ou PNG).',
@@ -284,12 +300,46 @@ export default function Visual() {
         return fileRef.current ?? (await toFile(canvas));
     };
 
+    /** Met le visuel affiché sur le mur, s'il n'y est pas déjà dans cette version. */
+    const publishToWall = async () => {
+        const canvas = canvasRef.current;
+        const draw = drawCount.current;
+
+        if (!canvas || !photo || publishedDraw.current === draw) {
+            return;
+        }
+
+        publishedDraw.current = draw;
+        setWallStatus('sending');
+
+        try {
+            await wall.publish(canvas, name);
+            setWallStatus('done');
+        } catch {
+            publishedDraw.current = null;
+            setWallStatus('error');
+        }
+    };
+
+    const toggleWall = (checked: boolean) => {
+        setShowOnWall(checked);
+
+        // Coché après avoir déjà enregistré : inutile d'enregistrer une seconde fois.
+        if (checked && saved) {
+            void publishToWall();
+        }
+    };
+
     const saveImage = async () => {
         const file = await exportFile();
 
         if (file) {
             download(file);
             setSaved(true);
+
+            if (showOnWall) {
+                void publishToWall();
+            }
         }
     };
 
@@ -298,6 +348,11 @@ export default function Visual() {
 
         if (!file) {
             return;
+        }
+
+        // Envoi en parallèle, sans attendre : sur iPhone, le partage doit partir tout de suite.
+        if (showOnWall) {
+            void publishToWall();
         }
 
         const date = event.startsAt
@@ -546,7 +601,28 @@ export default function Visual() {
                         </Step>
                     </ol>
 
-                    <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                    <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-event-border bg-white px-5 py-4 transition has-checked:border-event-accent has-checked:bg-event-surface">
+                        <input
+                            type="checkbox"
+                            checked={showOnWall}
+                            onChange={(change) =>
+                                toggleWall(change.target.checked)
+                            }
+                            className="mt-0.5 size-5 shrink-0 cursor-pointer accent-event-accent"
+                        />
+                        <span>
+                            <span className="block text-sm font-bold text-event-fg">
+                                Afficher mon visuel sur le mur
+                            </span>
+                            <span className="mt-0.5 block text-sm text-event-muted">
+                                Il apparaîtra en bas de cette page, avec ceux
+                                des autres participants. Tu pourras le retirer
+                                quand tu veux.
+                            </span>
+                        </span>
+                    </label>
+
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         {canShareFiles && (
                             <button
                                 type="button"
@@ -591,6 +667,50 @@ export default function Visual() {
                         </p>
                     )}
 
+                    {wallStatus === 'sending' && (
+                        <p
+                            role="status"
+                            className="mt-3 flex items-start gap-2 rounded-xl bg-event-surface px-4 py-3 text-sm text-event-fg"
+                        >
+                            <LoaderCircle className="mt-0.5 size-4 shrink-0 animate-spin text-event-accent-ink" />
+                            Ajout de ton visuel au mur…
+                        </p>
+                    )}
+
+                    {wallStatus === 'done' && (
+                        <p
+                            role="status"
+                            className="mt-3 flex items-start gap-2 rounded-xl bg-event-surface px-4 py-3 text-sm text-event-fg"
+                        >
+                            <Images className="mt-0.5 size-4 shrink-0 text-event-accent-ink" />
+                            <span>
+                                Ton visuel est sur le mur des participants.{' '}
+                                <a
+                                    href="#mur"
+                                    className="font-bold text-event-accent-ink underline underline-offset-2"
+                                >
+                                    Le voir
+                                </a>
+                            </span>
+                        </p>
+                    )}
+
+                    {wallStatus === 'error' && (
+                        <p
+                            role="alert"
+                            className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+                        >
+                            Ton visuel n’a pas pu être ajouté au mur.
+                            <button
+                                type="button"
+                                onClick={() => void publishToWall()}
+                                className="font-bold underline underline-offset-2"
+                            >
+                                Réessayer
+                            </button>
+                        </p>
+                    )}
+
                     <div className="mt-6 flex gap-3 rounded-2xl border border-dashed border-event-accent/50 bg-event-surface px-5 py-4">
                         <Lock className="mt-0.5 size-5 shrink-0 text-event-accent-ink" />
                         <div>
@@ -598,9 +718,10 @@ export default function Visual() {
                                 Ta photo reste privée
                             </p>
                             <p className="mt-0.5 text-sm text-event-muted">
-                                Le visuel est créé directement sur ton appareil
-                                : ta photo n’est ni envoyée ni enregistrée sur
-                                nos serveurs.
+                                Le visuel est créé directement sur ton appareil.
+                                Rien n’est envoyé, sauf si tu coches « Afficher
+                                mon visuel sur le mur » : seul le visuel terminé
+                                est alors publié, jamais ta photo d’origine.
                             </p>
                         </div>
                     </div>
@@ -627,6 +748,17 @@ export default function Visual() {
                     )}
                 </div>
             </div>
+
+            <VisualWall
+                items={wall.items}
+                total={wall.total}
+                hasMore={wall.next !== null}
+                loadingMore={wall.loadingMore}
+                mineId={wall.mine?.id ?? null}
+                canModerate={auth.canManageRegistrations}
+                onLoadMore={() => void wall.loadMore().catch(() => {})}
+                onRemove={wall.remove}
+            />
         </EventShell>
     );
 }

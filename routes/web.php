@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeployHookController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\VisualController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -13,8 +14,19 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 Route::inertia('confidentialite', 'privacy')->name('privacy');
 Route::inertia('boutique', 'boutique')->name('boutique');
-// "J'y serai !" visual: built in the browser, the photo is never uploaded.
-Route::inertia('j-y-serai', 'visual')->name('visual');
+// "J'y serai !" visual: built in the browser. Only the finished visual is uploaded,
+// and only when its author chooses to show it on the participants wall.
+Route::get('j-y-serai', [VisualController::class, 'show'])->name('visual');
+Route::get('j-y-serai/mur', [VisualController::class, 'index'])->name('visuals.index');
+Route::post('j-y-serai/mur', [VisualController::class, 'store'])
+    ->middleware('throttle:visuals')
+    ->name('visuals.store');
+Route::get('j-y-serai/mur/{visual}/{size}.jpg', [VisualController::class, 'image'])
+    ->whereIn('size', ['petit', 'grand'])
+    ->name('visuals.image');
+Route::delete('j-y-serai/mur/{visual}', [VisualController::class, 'destroy'])
+    ->middleware('throttle:30,1')
+    ->name('visuals.destroy');
 
 Route::get('inscription', [RegistrationController::class, 'create'])->name('registration.create');
 Route::post('inscription', [RegistrationController::class, 'store'])
