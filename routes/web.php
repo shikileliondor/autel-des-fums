@@ -34,6 +34,10 @@ Route::post('inscription', [RegistrationController::class, 'store'])
     ->name('registration.store');
 Route::get('inscription/confirmee', [RegistrationController::class, 'confirmed'])->name('registration.confirmed');
 Route::get('inscription/confirmee/pdf', [RegistrationController::class, 'pdf'])->name('registration.pdf');
+Route::get('inscription/retrouver', [RegistrationController::class, 'find'])->name('registration.find');
+Route::post('inscription/retrouver', [RegistrationController::class, 'lookup'])
+    ->middleware('throttle:registration-lookups')
+    ->name('registration.lookup');
 // Opened by the QR code of the PDF. Throttled so codes can't be tried in bulk.
 Route::get('inscrit/{registration:reference}', [RegistrationController::class, 'show'])
     ->middleware('throttle:60,1')
@@ -52,6 +56,7 @@ Route::prefix('{current_team}')
         Route::middleware('can:manage-registrations')->group(function () {
             Route::get('inscrits', [AdminRegistrationController::class, 'index'])->name('registrations.index');
             Route::get('inscrits/export', [AdminRegistrationController::class, 'export'])->name('registrations.export');
+            Route::get('inscrits/{registration}/pdf', [AdminRegistrationController::class, 'pdf'])->name('registrations.pdf');
             Route::get('accueil', [CheckInController::class, 'show'])->name('check-in.show');
             Route::post('accueil', [CheckInController::class, 'store'])->name('check-in.store');
         });

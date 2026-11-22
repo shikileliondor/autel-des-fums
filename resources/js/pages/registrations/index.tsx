@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Download, Search } from 'lucide-react';
+import { Download, FileDown, Search } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import RegistrationStats from '@/components/registration-stats';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import {
     exportMethod as exportRegistrations,
     index,
+    pdf,
 } from '@/routes/registrations';
 import type { RegistrationRow, RegistrationStats as Stats } from '@/types';
 
@@ -109,6 +110,7 @@ export default function RegistrationsIndex({
                                 <th className="px-4 py-3 font-medium">
                                     Présent
                                 </th>
+                                <th className="px-4 py-3 font-medium">PDF</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -156,12 +158,33 @@ export default function RegistrationsIndex({
                                             </span>
                                         )}
                                     </td>
+                                    <td className="px-4 py-2">
+                                        <Button
+                                            asChild
+                                            variant="ghost"
+                                            size="icon"
+                                            title={`Télécharger le PDF de ${r.name}`}
+                                        >
+                                            <a
+                                                href={
+                                                    pdf({
+                                                        current_team:
+                                                            currentTeam?.slug,
+                                                        registration: r.id,
+                                                    }).url
+                                                }
+                                                aria-label={`Télécharger le PDF de ${r.name}`}
+                                            >
+                                                <FileDown />
+                                            </a>
+                                        </Button>
+                                    </td>
                                 </tr>
                             ))}
                             {registrations.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={9}
+                                        colSpan={10}
                                         className="px-4 py-12 text-center text-muted-foreground"
                                     >
                                         {filters.search || filters.group

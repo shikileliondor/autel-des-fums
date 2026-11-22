@@ -2,6 +2,7 @@
 
 use App\Models\Registration;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -22,6 +23,22 @@ test('users who are not admins cannot see registrations', function () {
     $this->actingAs($user)
         ->get(route('registrations.export', $user->currentTeam))
         ->assertForbidden();
+
+    $this->actingAs($user)
+        ->get(route('registrations.pdf', [$user->currentTeam, Registration::factory()->create()]))
+        ->assertForbidden();
+});
+
+test('admins can download the pdf of any registrant', function () {
+    Storage::fake('local');
+    $admin = User::factory()->create(['email' => 'admin@example.com']);
+    $registration = Registration::factory()->create();
+
+    $this->actingAs($admin)
+        ->get(route('registrations.pdf', [$admin->currentTeam, $registration]))
+        ->assertOk()
+        ->assertHeader('content-type', 'application/pdf')
+        ->assertDownload("inscription-{$registration->reference}.pdf");
 });
 
 test('admins can list registrations with stats', function () {

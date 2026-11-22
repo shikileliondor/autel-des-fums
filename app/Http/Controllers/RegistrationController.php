@@ -2,21 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Registrations\RegistrationPdf;
 use App\Http\Requests\StoreRegistrationRequest;
 use App\Mail\RegistrationConfirmed;
 use App\Models\Registration;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -99,7 +92,7 @@ class RegistrationController extends Controller
     /**
      * Download the confirmation of the registration just submitted as a PDF.
      */
-    public function pdf(Request $request): StreamedResponse|RedirectResponse
+    public function pdf(Request $request, RegistrationPdf $pdf): StreamedResponse|RedirectResponse
     {
         $registration = Registration::find((int) $request->session()->get('registration_id'));
 
@@ -107,19 +100,45 @@ class RegistrationController extends Controller
             return to_route('registration.create');
         }
 
-        // Generated once per registration, then served from disk: dompdf is the heaviest
-        // part of the site and the PDF is requested automatically after each registration.
-        // Bumped whenever the PDF changes (v3: the QR code opens the registrant page), so older PDFs get regenerated.
-        $path = "pdf/v3/inscription-{$registration->reference}.pdf";
-        $disk = Storage::disk('local');
+        return $pdf->download($registration);
+    }
 
-        if (! $disk->exists($path)) {
-            $disk->put($path, $this->renderPdf($registration));
+    /**
+     * Page where registrants find their registration again, and its PDF.
+     */
+    public function find(): Response
+    {
+        return Inertia::render('registration/find');
+    }
+
+    /**
+     * Find a registration by the phone number used to register, then open its
+     * confirmation page (with the PDF). The phone is asked rather than the name:
+     * the PDF shows the phone, e-mail and entrance QR code, which a name alone
+     * must not give away.
+     */
+    public function lookup(Request $request): RedirectResponse
+    {
+        $request->merge(['phone' => StoreRegistrationRequest::normalizePhone((string) $request->input('phone'))]);
+
+        $request->validate([
+            'phone' => ['required', 'regex:/^\+225[0-9]{10}$/'],
+        ], [
+            'phone.required' => 'Entre le numéro de téléphone utilisé pour ton inscription.',
+            'phone.regex' => 'Le numéro doit avoir 10 chiffres après +225 (ex. +225 07 01 02 03 04).',
+        ]);
+
+        $registration = Registration::where('phone', $request->input('phone'))->first();
+
+        if (! $registration) {
+            return back()->withInput()->withErrors([
+                'phone' => 'Aucune inscription avec ce numéro. Vérifie-le, ou inscris-toi si ce n’est pas encore fait.',
+            ]);
         }
 
-        return $disk->download($path, "inscription-{$registration->reference}.pdf", [
-            'Content-Type' => 'application/pdf',
-        ]);
+        $request->session()->put('registration_id', $registration->id);
+
+        return to_route('registration.confirmed');
     }
 
     /**
@@ -136,37 +155,5 @@ class RegistrationController extends Controller
                 'checkedIn' => $registration->checked_in_at !== null,
             ],
         ]);
-    }
-
-    /**
-     * Render the registration confirmation PDF.
-     */
-    private function renderPdf(Registration $registration): string
-    {
-        $startsAt = config('event.starts_at');
-
-        return Pdf::loadView('pdf.registration', [
-            'registration' => $registration,
-            'qrCode' => $this->qrCode(route('registration.show', $registration)),
-            'eventName' => config('event.name'),
-            'startsAt' => $startsAt
-                ? Str::ucfirst(Carbon::parse($startsAt)->settings(['locale' => 'fr'])->translatedFormat(
-                    str_contains($startsAt, ':') ? 'l j F Y \à H\hi' : 'l j F Y'
-                ))
-                : null,
-            'place' => collect([config('event.venue'), config('event.city')])->filter()->implode(', '),
-        ])->output();
-    }
-
-    /**
-     * QR code of the registration code, scanned at the entrance. SVG, so dompdf
-     * renders it without the GD extension.
-     */
-    private function qrCode(string $content): string
-    {
-        $svg = (new Writer(new ImageRenderer(new RendererStyle(320, 1), new SvgImageBackEnd)))
-            ->writeString($content);
-
-        return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 }

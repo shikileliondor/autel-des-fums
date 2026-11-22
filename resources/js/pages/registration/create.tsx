@@ -1,15 +1,15 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { BellRing, PartyPopper } from 'lucide-react';
+import { ArrowRight, BellRing, PartyPopper, Search } from 'lucide-react';
 import { useState } from 'react';
-import type { InputHTMLAttributes } from 'react';
 import Confetti from '@/components/event/confetti';
 import { CountdownDisplay } from '@/components/event/countdown';
 import EventShell from '@/components/event/event-shell';
+import { Field, inputClass } from '@/components/event/form-field';
 import { useRegistrationOpening } from '@/hooks/use-registration-opening';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { privacy } from '@/routes';
-import { create, store } from '@/routes/registration';
+import { create, find, store } from '@/routes/registration';
 
 // Doit rester identique à Registration::ROLES côté serveur.
 const ROLES = [
@@ -21,55 +21,6 @@ const ROLES = [
     'Comité d’organisation',
     'Pasteur',
 ];
-
-const inputClass =
-    'h-12 w-full rounded-xl border border-event-border bg-event-surface px-4 text-[16px] text-event-fg placeholder:text-event-muted/60 outline-none transition focus:border-event-accent focus:ring-2 focus:ring-event-accent/30 aria-invalid:border-red-500';
-
-function Field({
-    label,
-    name,
-    error,
-    optional,
-    mandatory,
-    ...props
-}: InputHTMLAttributes<HTMLInputElement> & {
-    label: string;
-    name: string;
-    error?: string;
-    optional?: boolean;
-    /** Affiche « (obligatoire) » à côté du libellé. */
-    mandatory?: boolean;
-}) {
-    return (
-        <div className="grid gap-2">
-            <label
-                htmlFor={name}
-                className="text-sm font-semibold text-event-fg"
-            >
-                {label}
-                {optional && (
-                    <span className="ml-1 font-normal text-event-muted">
-                        (facultatif)
-                    </span>
-                )}
-                {mandatory && (
-                    <span className="ml-1 font-normal text-event-accent-ink">
-                        (obligatoire)
-                    </span>
-                )}
-            </label>
-            <input
-                id={name}
-                name={name}
-                aria-invalid={!!error}
-                required={!optional}
-                className={inputClass}
-                {...props}
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-        </div>
-    );
-}
 
 export default function RegistrationCreate({
     canRegisterEarly,
@@ -123,6 +74,13 @@ export default function RegistrationCreate({
                         Remplis ce formulaire pour t’inscrire à l’Autel des
                         Parfums.
                     </p>
+                    <Link
+                        href={find()}
+                        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-event-border px-4 py-2 text-sm font-semibold text-event-accent-ink transition hover:border-event-accent hover:text-event-fg"
+                    >
+                        <Search className="size-4" />
+                        Déjà inscrit ? Retrouve ton inscription
+                    </Link>
                 </div>
 
                 <Form
@@ -196,6 +154,15 @@ export default function RegistrationCreate({
                                 error={errors.phone}
                                 mandatory
                             />
+                            {errors.phone?.includes('déjà inscrit') && (
+                                <Link
+                                    href={find()}
+                                    className="group -mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-event-accent-ink hover:text-event-fg"
+                                >
+                                    Retrouve ton inscription et ton PDF
+                                    <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+                                </Link>
+                            )}
                             <Field
                                 label="E-mail"
                                 name="email"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Registrations\RegistrationPdf;
 use App\Http\Controllers\Controller;
 use App\Models\Registration;
 use Illuminate\Http\Request;
@@ -83,6 +84,15 @@ class RegistrationController extends Controller
         }, 'inscrits-autel-des-parfums-'.now()->format('Y-m-d').'.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    /**
+     * Download a registrant's confirmation PDF, the same one they received.
+     * The team slug comes first in the URL, so it is taken before the registration.
+     */
+    public function pdf(string $currentTeam, Registration $registration, RegistrationPdf $pdf): StreamedResponse
+    {
+        return $pdf->download($registration);
     }
 
     /**

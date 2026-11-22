@@ -70,6 +70,21 @@ class AppServiceProvider extends ServiceProvider
                 ])) : null,
             ]);
         });
+
+        // "Retrouver mon inscription": a phone number opens a registration and its PDF,
+        // so numbers can't be tried in bulk. The per-IP limit stays high for the church
+        // Wi-Fi on the day, when many people look themselves up from the same connection.
+        RateLimiter::for('registration-lookups', function (Request $request) {
+            $tooMany = fn () => back()->withInput()->withErrors([
+                'phone' => 'Trop de tentatives. Patiente une minute puis réessaie.',
+            ]);
+
+            return [
+                Limit::perMinute(60)->by('lookup-ip:'.$request->ip())->response($tooMany),
+                Limit::perHour(600)->by('lookup-ip-hour:'.$request->ip())->response($tooMany),
+                Limit::perMinute(10)->by('lookup-phone:'.StoreRegistrationRequest::normalizePhone((string) $request->input('phone')))->response($tooMany),
+            ];
+        });
     }
 
     /**

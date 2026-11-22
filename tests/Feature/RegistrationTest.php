@@ -228,13 +228,77 @@ test('the "j\'y serai" visual page can be displayed', function () {
 test('the pdf is generated once then served from disk', function () {
     Storage::fake('local');
     $this->post(route('registration.store'), validRegistration());
-    $path = 'pdf/v3/inscription-'.Registration::sole()->reference.'.pdf';
 
     $this->get(route('registration.pdf'))->assertOk();
-    Storage::disk('local')->assertExists($path);
+    $files = Storage::disk('local')->allFiles('pdf');
+    expect($files)->toHaveCount(1)
+        ->and($files[0])->toEndWith('/inscription-'.Registration::sole()->reference.'.pdf');
 
-    Storage::disk('local')->put($path, 'cached');
+    Storage::disk('local')->put($files[0], 'cached');
     expect($this->get(route('registration.pdf'))->streamedContent())->toBe('cached');
+});
+
+test('changing the event date, time or place regenerates the pdf', function () {
+    Storage::fake('local');
+    $this->post(route('registration.store'), validRegistration());
+    $this->get(route('registration.pdf'))->assertOk();
+
+    config(['event.starts_at' => '2026-11-29 15:00']);
+    $this->get(route('registration.pdf'))->assertOk();
+
+    expect(Storage::disk('local')->allFiles('pdf'))->toHaveCount(2);
+});
+
+test('the find registration page can be displayed', function () {
+    $this->get(route('registration.find'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('registration/find'));
+});
+
+test('registrants find their registration and its pdf with their phone, however it is written', function (string $phone) {
+    Storage::fake('local');
+    $registration = Registration::factory()->create(['phone' => '+2250701020304']);
+
+    $this->post(route('registration.lookup'), ['phone' => $phone])
+        ->assertRedirect(route('registration.confirmed'));
+
+    $this->get(route('registration.confirmed'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('registration/confirmed')
+            ->where('registration.reference', $registration->reference)
+            ->where('autoDownload', false));
+
+    $this->get(route('registration.pdf'))
+        ->assertDownload("inscription-{$registration->reference}.pdf");
+})->with([
+    '+225 07 01 02 03 04',
+    '0701020304',
+    '00225 07.01.02.03.04',
+]);
+
+test('an unknown phone number finds no registration', function () {
+    Registration::factory()->create(['phone' => '+2250701020304']);
+
+    $this->from(route('registration.find'))
+        ->post(route('registration.lookup'), ['phone' => '07 99 99 99 99'])
+        ->assertRedirect(route('registration.find'))
+        ->assertSessionHasErrors('phone');
+
+    $this->get(route('registration.pdf'))->assertRedirect(route('registration.create'));
+});
+
+test('the phone looked up must be a full number', function (string $phone) {
+    $this->post(route('registration.lookup'), ['phone' => $phone])
+        ->assertSessionHasErrors('phone');
+})->with(['', '+225 ', '07 01 02']);
+
+test('the same phone can only be looked up a few times per minute', function () {
+    foreach (range(1, 10) as $i) {
+        $this->post(route('registration.lookup'), ['phone' => '07 99 99 99 99']);
+    }
+
+    $this->post(route('registration.lookup'), ['phone' => '+225 0799999999'])
+        ->assertSessionHasErrors(['phone' => 'Trop de tentatives. Patiente une minute puis réessaie.']);
 });
 
 test('many people on the same network can register in the same minute', function () {
