@@ -51,6 +51,16 @@ test('the wall is paginated', function () {
         ->assertJsonPath('next', null);
 });
 
+test('the slideshow lists every visual of the wall, newest first', function () {
+    $visuals = Visual::factory()->count(Visual::PER_PAGE + 5)->create();
+
+    $this->getJson(route('visuals.reel'))
+        ->assertOk()
+        ->assertJsonCount(Visual::PER_PAGE + 5, 'items')
+        ->assertJsonPath('items.0.id', $visuals->last()->id)
+        ->assertJsonMissingPath('items.0.token_hash');
+});
+
 test('a visitor can put their visual on the wall', function () {
     $response = $this->postJson(route('visuals.store'), wallUpload())
         ->assertCreated()

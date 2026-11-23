@@ -1,5 +1,6 @@
 import { LoaderCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import VisualReel from '@/components/event/visual-reel';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { WallItem } from '@/lib/visual-wall';
@@ -10,6 +11,7 @@ export default function VisualWall({
     total,
     hasMore,
     loadingMore,
+    version,
     mineId,
     canModerate,
     onLoadMore,
@@ -19,6 +21,7 @@ export default function VisualWall({
     total: number;
     hasMore: boolean;
     loadingMore: boolean;
+    version: number;
     mineId: number | null;
     canModerate: boolean;
     onLoadMore: () => void;
@@ -78,8 +81,8 @@ export default function VisualWall({
                 </h2>
                 <p className="mx-auto mt-3 max-w-md text-sm text-event-muted sm:text-base">
                     {total > 0
-                        ? `${total} visuel${total > 1 ? 's' : ''} sur le mur. Coche « Afficher mon visuel sur le mur » pour y ajouter le tien.`
-                        : 'Personne n’a encore affiché son visuel. Sois le premier : coche « Afficher mon visuel sur le mur » avant de l’enregistrer.'}
+                        ? `${total} visuel${total > 1 ? 's' : ''} sur le mur. Crée le tien plus haut, il s’ajoutera ici.`
+                        : 'Personne n’a encore créé son visuel. Sois le premier, il s’affichera ici.'}
                 </p>
             </div>
 
@@ -91,6 +94,8 @@ export default function VisualWall({
                     {error}
                 </p>
             )}
+
+            <VisualReel version={version} />
 
             {items.length > 0 && (
                 <ul className="mt-8 grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">

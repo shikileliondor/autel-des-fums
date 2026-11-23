@@ -16,8 +16,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * "J'y serai !" page and its participants wall.
  *
- * The visual is drawn in the browser. It reaches the server only when its author
- * ticks the wall box, and then only the finished visual is sent, never the photo.
+ * The visual is drawn in the browser. When its author saves or shares it, the
+ * finished visual is sent to show on the participants wall, never the photo.
  */
 class VisualController extends Controller
 {
@@ -39,6 +39,14 @@ class VisualController extends Controller
         $before = $request->integer('avant') ?: null;
 
         return response()->json(Visual::wall($before));
+    }
+
+    /**
+     * All the visuals of the wall, for the slideshow played above it.
+     */
+    public function reel(): JsonResponse
+    {
+        return response()->json(['items' => Visual::reel()]);
     }
 
     /**

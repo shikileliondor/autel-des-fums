@@ -1,5 +1,5 @@
 /**
- * Mur des participants : les visuels « J'y serai ! » que leurs auteurs ont choisi d'afficher.
+ * Mur des participants : chaque visuel « J'y serai ! » enregistré ou partagé s'y affiche.
  *
  * Seul le visuel terminé est envoyé (grand format et vignette), jamais la photo d'origine.
  * Le code de retrait renvoyé par le serveur reste sur l'appareil de l'auteur : c'est lui
@@ -7,7 +7,7 @@
  */
 import { http } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { destroy, index, store } from '@/routes/visuals';
+import { destroy, index, reel, store } from '@/routes/visuals';
 
 export type WallItem = {
     id: number;
@@ -34,6 +34,8 @@ export function useVisualWall(initial: WallPage) {
     const [next, setNext] = useState(initial.next);
     const [total, setTotal] = useState(initial.total);
     const [loadingMore, setLoadingMore] = useState(false);
+    // Change à chaque publication ou retrait : le diaporama se recharge.
+    const [version, setVersion] = useState(0);
     const [mine, setMineState] = useState<MyVisual | null>(null);
     // Toujours à jour dans les fonctions asynchrones.
     const mineRef = useRef<MyVisual | null>(null);
@@ -118,6 +120,7 @@ export function useVisualWall(initial: WallPage) {
             ...current.filter(({ id }) => id !== body.replaced),
         ]);
         setTotal((count) => count + (body.replaced ? 0 : 1));
+        setVersion((current) => current + 1);
 
         return body.visual;
     };
@@ -149,9 +152,31 @@ export function useVisualWall(initial: WallPage) {
 
         setItems((current) => current.filter(({ id }) => id !== item.id));
         setTotal((count) => Math.max(0, count - 1));
+        setVersion((current) => current + 1);
     };
 
-    return { items, next, total, loadingMore, mine, loadMore, publish, remove };
+    return {
+        items,
+        next,
+        total,
+        loadingMore,
+        version,
+        mine,
+        loadMore,
+        publish,
+        remove,
+    };
+}
+
+/** Tous les visuels du mur, du plus récent au plus ancien, pour le diaporama. */
+export async function fetchReel(): Promise<WallItem[]> {
+    const response = await http.getClient().request({
+        method: 'get',
+        url: reel.url(),
+        headers: { Accept: 'application/json' },
+    });
+
+    return (JSON.parse(response.data) as { items: WallItem[] }).items;
 }
 
 function readMyVisual(): MyVisual | null {

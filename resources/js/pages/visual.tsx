@@ -7,7 +7,6 @@ import {
     ImagePlus,
     Images,
     LoaderCircle,
-    Lock,
     Move,
     RotateCcw,
     Share2,
@@ -78,9 +77,8 @@ export default function Visual({ wall: initialWall }: { wall: WallPage }) {
     const [saved, setSaved] = useState(false);
     const [canShareFiles] = useState(canShareImages);
 
+    // Chaque visuel enregistré ou partagé s'affiche sur le mur, en bas de la page.
     const wall = useVisualWall(initialWall);
-    // Décoché par défaut : rien ne part sur le mur sans l'accord de la personne.
-    const [showOnWall, setShowOnWall] = useState(false);
     const [wallStatus, setWallStatus] = useState<WallStatus>('idle');
     // Numéro du dessin affiché, et celui déjà publié : pas de doublon si on enregistre deux fois.
     const drawCount = useRef(0);
@@ -321,25 +319,13 @@ export default function Visual({ wall: initialWall }: { wall: WallPage }) {
         }
     };
 
-    const toggleWall = (checked: boolean) => {
-        setShowOnWall(checked);
-
-        // Coché après avoir déjà enregistré : inutile d'enregistrer une seconde fois.
-        if (checked && saved) {
-            void publishToWall();
-        }
-    };
-
     const saveImage = async () => {
         const file = await exportFile();
 
         if (file) {
             download(file);
             setSaved(true);
-
-            if (showOnWall) {
-                void publishToWall();
-            }
+            void publishToWall();
         }
     };
 
@@ -350,10 +336,8 @@ export default function Visual({ wall: initialWall }: { wall: WallPage }) {
             return;
         }
 
-        // Envoi en parallèle, sans attendre : sur iPhone, le partage doit partir tout de suite.
-        if (showOnWall) {
-            void publishToWall();
-        }
+        // Envoi au mur en parallèle, sans attendre : sur iPhone, le partage doit partir tout de suite.
+        void publishToWall();
 
         const date = event.startsAt
             ? new Intl.DateTimeFormat('fr-FR', {
@@ -601,28 +585,7 @@ export default function Visual({ wall: initialWall }: { wall: WallPage }) {
                         </Step>
                     </ol>
 
-                    <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-event-border bg-white px-5 py-4 transition has-checked:border-event-accent has-checked:bg-event-surface">
-                        <input
-                            type="checkbox"
-                            checked={showOnWall}
-                            onChange={(change) =>
-                                toggleWall(change.target.checked)
-                            }
-                            className="mt-0.5 size-5 shrink-0 cursor-pointer accent-event-accent"
-                        />
-                        <span>
-                            <span className="block text-sm font-bold text-event-fg">
-                                Afficher mon visuel sur le mur
-                            </span>
-                            <span className="mt-0.5 block text-sm text-event-muted">
-                                Il apparaîtra en bas de cette page, avec ceux
-                                des autres participants. Tu pourras le retirer
-                                quand tu veux.
-                            </span>
-                        </span>
-                    </label>
-
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-6 grid gap-2 sm:grid-cols-2">
                         {canShareFiles && (
                             <button
                                 type="button"
@@ -712,16 +675,17 @@ export default function Visual({ wall: initialWall }: { wall: WallPage }) {
                     )}
 
                     <div className="mt-6 flex gap-3 rounded-2xl border border-dashed border-event-accent/50 bg-event-surface px-5 py-4">
-                        <Lock className="mt-0.5 size-5 shrink-0 text-event-accent-ink" />
+                        <Images className="mt-0.5 size-5 shrink-0 text-event-accent-ink" />
                         <div>
                             <p className="text-sm font-bold text-event-fg">
-                                Ta photo reste privée
+                                Ton visuel s’affiche sur le mur
                             </p>
                             <p className="mt-0.5 text-sm text-event-muted">
-                                Le visuel est créé directement sur ton appareil.
-                                Rien n’est envoyé, sauf si tu coches « Afficher
-                                mon visuel sur le mur » : seul le visuel terminé
-                                est alors publié, jamais ta photo d’origine.
+                                Quand tu l’enregistres ou le partages, il
+                                s’ajoute au mur des participants, en bas de
+                                cette page. Seul le visuel terminé est envoyé,
+                                jamais ta photo d’origine. Tu peux le retirer du
+                                mur quand tu veux.
                             </p>
                         </div>
                     </div>
@@ -754,6 +718,7 @@ export default function Visual({ wall: initialWall }: { wall: WallPage }) {
                 total={wall.total}
                 hasMore={wall.next !== null}
                 loadingMore={wall.loadingMore}
+                version={wall.version}
                 mineId={wall.mine?.id ?? null}
                 canModerate={auth.canManageRegistrations}
                 onLoadMore={() => void wall.loadMore().catch(() => {})}

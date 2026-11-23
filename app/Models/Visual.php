@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * A "J'y serai !" visual its author chose to show on the participants wall.
+ * A "J'y serai !" visual shown on the participants wall, sent when its author saved or shared it.
  *
  * Only the finished visual is kept (full size and thumbnail), never the original photo.
  *
@@ -79,6 +79,21 @@ class Visual extends Model
             'next' => $hasMore ? $visuals->last()?->id : null,
             'total' => static::count(),
         ];
+    }
+
+    /**
+     * Every visual of the wall for the slideshow, newest first (capped so the list stays light).
+     *
+     * @return list<array{id: int, name: string|null, thumb: string, image: string}>
+     */
+    public static function reel(int $limit = 500): array
+    {
+        return array_values(static::query()
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Visual $visual) => $visual->toWallItem())
+            ->all());
     }
 
     /**

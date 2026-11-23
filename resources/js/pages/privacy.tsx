@@ -74,13 +74,14 @@ export default function Privacy() {
 
                     <Section title="Visuel « J’y serai ! »">
                         Le visuel est créé sur votre appareil et votre photo
-                        n’est pas envoyée. Si vous cochez « Afficher mon visuel
-                        sur le mur », seul le visuel terminé (avec le prénom
-                        saisi, le cas échéant) est enregistré et affiché
-                        publiquement sur la page « J’y serai ! ». Vous pouvez le
-                        retirer à tout moment depuis l’appareil qui l’a publié,
-                        ou en nous écrivant. L’équipe d’organisation peut aussi
-                        retirer un visuel inapproprié.
+                        d’origine n’est jamais envoyée. Lorsque vous enregistrez
+                        ou partagez votre visuel, le visuel terminé (avec le
+                        prénom saisi, le cas échéant) est enregistré et affiché
+                        publiquement sur le mur des participants, en bas de la
+                        page du visuel. Vous pouvez le retirer à tout moment
+                        depuis l’appareil qui l’a publié, ou en nous écrivant.
+                        L’équipe d’organisation peut aussi retirer un visuel
+                        inapproprié.
                     </Section>
 
                     <Section title="Qui y a accès">

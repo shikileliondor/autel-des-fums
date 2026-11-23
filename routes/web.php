@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 Route::inertia('confidentialite', 'privacy')->name('privacy');
 Route::inertia('boutique', 'boutique')->name('boutique');
-// "J'y serai !" visual: built in the browser. Only the finished visual is uploaded,
-// and only when its author chooses to show it on the participants wall.
+// "J'y serai !" visual: built in the browser. Once saved or shared, the finished
+// visual (never the photo) is uploaded to show on the participants wall.
 Route::get('j-y-serai', [VisualController::class, 'show'])->name('visual');
 Route::get('j-y-serai/mur', [VisualController::class, 'index'])->name('visuals.index');
+Route::get('j-y-serai/mur/diaporama', [VisualController::class, 'reel'])->name('visuals.reel');
 Route::post('j-y-serai/mur', [VisualController::class, 'store'])
     ->middleware('throttle:visuals')
     ->name('visuals.store');
